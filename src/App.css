@@ -1,0 +1,332 @@
+:root {
+  --ink: #1a1c1e;
+  --ink-soft: #3d4248;
+  --paper: #f3f0ea;
+  --paper-2: #e8e3d8;
+  --line: #c8c0b0;
+  --accent: #b91c1c;
+  --accent-deep: #7f1d1d;
+  --hot: #b91c1c;
+  --good: #0f766e;
+  --fair: #a16207;
+  --cold: #64748b;
+  --muted: #94a3b8;
+  --panel: rgba(255, 252, 247, 0.92);
+  font-family: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+  overflow: hidden;
+}
+
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(185, 28, 28, 0.12), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(15, 118, 110, 0.08), transparent 50%),
+    linear-gradient(165deg, #f7f4ee 0%, #ebe6dc 45%, #e2ddd2 100%);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(185, 28, 28, 0.12), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(15, 118, 110, 0.08), transparent 50%),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 23px,
+      rgba(26, 28, 30, 0.03) 23px,
+      rgba(26, 28, 30, 0.03) 24px
+    ),
+    linear-gradient(165deg, #f7f4ee 0%, #ebe6dc 45%, #e2ddd2 100%);
+}
+
+.hero {
+  margin-bottom: 1.5rem;
+}
+
+.brand {
+  margin: 0;
+  font-family: 'Bebas Neue', 'Zen Kaku Gothic New', sans-serif;
+  font-size: clamp(3rem, 12vw, 4.5rem);
+  letter-spacing: 0.06em;
+  line-height: 0.95;
+  color: var(--ink);
+  text-shadow: 2px 2px 0 rgba(185, 28, 28, 0.15);
+}
+
+.machine-name {
+  margin: 0.6rem 0 0.35rem;
+  font-size: clamp(1.05rem, 3.5vw, 1.25rem);
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 1.25rem 1.1rem 1.5rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 12px 40px rgba(26, 28, 30, 0.06);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.field input,
+.field select {
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+  padding: 0.7rem 0.85rem;
+  border: 2px solid var(--ink);
+  border-radius: 2px;
+  background: #fffef9;
+  width: 100%;
+}
+
+.abeshi-field input {
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.results {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 1.5rem;
+}
+
+.results-head,
+.result-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.15fr 0.9fr 1.1fr;
+  gap: 0.35rem;
+  align-items: center;
+  padding: 0.65rem 0.55rem;
+  font-size: 0.82rem;
+}
+
+.results.with-stay .results-head,
+.results.with-stay .result-row {
+  grid-template-columns: 1fr 0.75fr 1.05fr 0.85fr 1fr;
+}
+
+.results-head {
+  color: var(--ink-soft);
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.4rem;
+}
+
+.result-row {
+  background: rgba(255, 255, 255, 0.55);
+  border-left: 3px solid var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-row .mode {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.result-row .stay {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.result-row .rate {
+  font-weight: 800;
+  font-size: 1.05rem;
+}
+
+.result-row.is-blend {
+  background: rgba(185, 28, 28, 0.06);
+  border-left-width: 4px;
+}
+
+.result-row.is-blend .mode {
+  color: var(--accent-deep);
+}
+
+.tone-hot {
+  border-left-color: var(--hot);
+}
+.tone-hot .rate {
+  color: var(--hot);
+}
+
+.tone-good {
+  border-left-color: var(--good);
+}
+.tone-good .rate {
+  color: var(--good);
+}
+
+.tone-fair {
+  border-left-color: var(--fair);
+}
+.tone-fair .rate {
+  color: var(--fair);
+}
+
+.tone-cold {
+  border-left-color: var(--cold);
+}
+.tone-cold .rate {
+  color: var(--cold);
+}
+
+.tone-muted {
+  opacity: 0.7;
+}
+
+.premises h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+.premises-note {
+  margin: 0 0 0.85rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.premises ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.premises li {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px dashed var(--line);
+}
+
+.premises li:last-of-type {
+  border-bottom: none;
+}
+
+.premise-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.65rem;
+  margin-bottom: 0.2rem;
+}
+
+.premise-top strong {
+  font-size: 0.82rem;
+}
+
+.premise-value {
+  font-weight: 700;
+  color: var(--accent-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--ink);
+  padding: 0.12rem 0.4rem;
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+}
+
+.premise-basis {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.footnote {
+  margin: 1rem 0 0;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+@media (max-width: 520px) {
+  .results-head,
+  .result-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  .results.with-stay .results-head,
+  .results.with-stay .result-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .results-head span:nth-child(n + 3),
+  .results.with-stay .results-head span:nth-child(n + 3) {
+    display: none;
+  }
+
+  .result-row span:nth-last-child(2)::before {
+    content: 'G ';
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .result-row span:nth-last-child(1)::before {
+    content: '投資 ';
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
+  .results.with-stay .result-row .stay::before {
+    content: '滞在 ';
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+}
