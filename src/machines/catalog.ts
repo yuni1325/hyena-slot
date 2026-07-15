@@ -19,6 +19,6 @@ export const machineCards: MachineCard[] = [
     path: '/machines/kabaneri-unato',
     name: 'スマスロ甲鉄城のカバネリ 海門決戦',
     shortName: 'カバネリ海門',
-    blurb: '表示G・実G・周期・短縮天井から期待出玉率を算出',
+    blurb: '表示G・周期・短縮天井から期待出玉率を算出（CZ・規定G込み）',
   },
 ]

@@ -17,6 +17,12 @@ export function formatYen(v: number | null): string {
   return `${sign}${Math.round(v).toLocaleString('ja-JP')}円`
 }
 
+export function formatCorrectionPp(v: number | null): string {
+  if (v === null) return '—'
+  const sign = v > 0 ? '+' : ''
+  return `${sign}${v.toFixed(1)}pt`
+}
+
 export function rateTone(rate: number | null): string {
   if (rate === null) return 'muted'
   if (rate >= 110) return 'hot'

@@ -4,7 +4,7 @@ import {
   buildKabaneriPremises,
   calculateKabaneri,
 } from '../machines/kabaneri-unato/calc'
-import { formatNum, formatRate, formatYen, rateTone } from '../lib/format'
+import { formatNum, formatRate, formatYen, formatCorrectionPp, rateTone } from '../lib/format'
 
 function parseIntSafe(text: string, fallback = 0): number {
   const n = Number(text)
@@ -14,26 +14,22 @@ function parseIntSafe(text: string, fallback = 0): number {
 
 export default function KabaneriUnatoPage() {
   const [displayText, setDisplayText] = useState('0')
-  const [actualText, setActualText] = useState('0')
   const [cycleText, setCycleText] = useState('1')
   const [shortened, setShortened] = useState(false)
 
   const displayGames = useMemo(() => parseIntSafe(displayText), [displayText])
-  const actualGames = useMemo(() => parseIntSafe(actualText), [actualText])
   const cycle = useMemo(() => {
     const n = parseIntSafe(cycleText, 1)
     return Math.min(6, Math.max(1, n))
   }, [cycleText])
 
   const input = useMemo(
-    () => ({ displayGames, actualGames, cycle, shortened }),
-    [displayGames, actualGames, cycle, shortened],
+    () => ({ displayGames, cycle, shortened }),
+    [displayGames, cycle, shortened],
   )
 
   const result = useMemo(() => calculateKabaneri(input), [input])
   const premises = useMemo(() => buildKabaneriPremises(input), [input])
-
-  const lag = displayGames - actualGames
 
   return (
     <div className="app">
@@ -45,7 +41,7 @@ export default function KabaneriUnatoPage() {
           </Link>
         </p>
         <h1 className="machine-name">スマスロ甲鉄城のカバネリ 海門決戦</h1>
-        <p className="tagline">実G・周期・短縮から天井狙いの期待値を確認</p>
+        <p className="tagline">表示G・周期・短縮から天井狙いの期待値を確認</p>
       </header>
 
       <main className="panel">
@@ -61,26 +57,6 @@ export default function KabaneriUnatoPage() {
             onBlur={() => setDisplayText(String(displayGames))}
           />
         </label>
-
-        <label className="field abeshi-field">
-          <span>実G数</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={999}
-            value={actualText}
-            onChange={(e) => setActualText(e.target.value)}
-            onBlur={() => setActualText(String(actualGames))}
-          />
-        </label>
-
-        {lag !== 0 && (
-          <p className="inline-note">
-            表示と実Gの差: {lag > 0 ? '+' : ''}
-            {lag}G（計算は実Gを主軸）
-          </p>
-        )}
 
         <label className="field">
           <span>現在周期</span>
@@ -121,27 +97,48 @@ export default function KabaneriUnatoPage() {
             </span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">平均G（有効残り）</span>
+            <span className="mode">なな徹表ベース</span>
+            <span>{formatRate(result.tablePayoutRate)}</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">周期補正</span>
+            <span>{formatCorrectionPp(result.cycleCorrectionPp)}</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">平均G（補正後）</span>
             <span>{formatNum(result.avgGames, 1)}G</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">平均投資</span>
+            <span className="mode">平均投資（補正後）</span>
             <span>{formatNum(result.avgInvestment, 1)}枚</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">なな徹表・平均G</span>
+            <span>{formatNum(result.tableAvgGames, 1)}G</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">周期モデル・ST期待G</span>
+            <span>{formatNum(result.modelGamesToSt, 1)}G</span>
           </div>
           <div className="result-row result-row-kaba">
             <span className="mode">G数天井残り</span>
             <span>{formatNum(result.remainingByG, 0)}G</span>
           </div>
+          {result.remainingToCycleG != null && (
+            <div className="result-row result-row-kaba">
+              <span className="mode">
+                周期規定Gまで（{cycle === 1 ? '150' : cycle === 2 ? '300' : '—'}
+                ）
+              </span>
+              <span>{formatNum(result.remainingToCycleG, 0)}G</span>
+            </div>
+          )}
           <div className="result-row result-row-kaba">
-            <span className="mode">周期モデル期待残り</span>
-            <span>{formatNum(result.remainingByCycle, 1)}G</span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・等価期待値（参考）</span>
+            <span className="mode">なな徹表・等価期待値</span>
             <span>{formatYen(result.tableYenEv)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・平均投資（参考）</span>
+            <span className="mode">なな徹表・平均投資</span>
             <span>
               {result.tableInvestYen == null
                 ? '—'
@@ -152,7 +149,9 @@ export default function KabaneriUnatoPage() {
 
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
-          <p className="premises-note">設定1固定・天井ハイエナ想定</p>
+          <p className="premises-note">
+            設定1固定・ST終了でヤメ／出玉率＝なな徹表＋周期補正
+          </p>
           <ul>
             {premises.map((p) => (
               <li key={p.label}>
@@ -166,8 +165,7 @@ export default function KabaneriUnatoPage() {
             ))}
           </ul>
           <p className="footnote">
-            出玉率＝ST平均獲得 ÷ 有効残りGの平均投資。有効残り＝min(G数天井残り,
-            周期モデル)。なな徹表は周期未考慮の参考値。
+            期待出玉率＝なな徹表ベース＋周期補正。分子は表準拠の約603枚。周期モデル差は50%だけ反映。規定G直前の周期当選は減衰。BIG:REG=1:1（REGはST約20%）。天井到達時のみエピソード＝ST確定。
           </p>
         </section>
       </main>
