@@ -14,12 +14,12 @@ import {
   formatYen,
 } from '../lib/format'
 import {
-  buildKabaneriPremises,
-  calculateKabaneri,
-  clampCycleToDisplay,
-  cycleBoundsForDisplay,
-} from '../machines/kabaneri-unato/calc'
-import { PREMISES } from '../machines/kabaneri-unato/data'
+  buildMonkeyPremises,
+  calculateMonkey,
+  clampCycle,
+  effectiveMaxCycle,
+} from '../machines/monkey-turn-v/calc'
+import { PREMISES, type MonkeyMode } from '../machines/monkey-turn-v/data'
 
 function parseIntSafe(text: string, fallback = 0): number {
   const n = Number(text)
@@ -27,47 +27,55 @@ function parseIntSafe(text: string, fallback = 0): number {
   return Math.floor(n)
 }
 
-export default function KabaneriUnatoPage() {
-  const [displayText, setDisplayText] = useState('0')
+const MODE_OPTIONS: { id: MonkeyMode; label: string }[] = [
+  { id: 'unknown', label: '不明（なな徹表のみ）' },
+  { id: 'A', label: 'モードA（最大6周期）' },
+  { id: 'B', label: 'モードB（最大3周期）' },
+  { id: 'heaven', label: '天国（1周期）' },
+]
+
+export default function MonkeyTurnVPage() {
+  const [actualText, setActualText] = useState('0')
   const [cycleText, setCycleText] = useState('1')
+  const [mode, setMode] = useState<MonkeyMode>('unknown')
   const [shortened, setShortened] = useState(false)
   const [closingHours, setClosingHours] = useState<ClosingHours>(
     DEFAULT_CLOSING_HOURS,
   )
 
-  const displayGames = useMemo(() => parseIntSafe(displayText), [displayText])
+  const actualGames = useMemo(() => parseIntSafe(actualText), [actualText])
   const rawCycle = useMemo(() => {
     const n = parseIntSafe(cycleText, 1)
     return Math.min(6, Math.max(1, n))
   }, [cycleText])
 
-  const { minCycle, maxCycle } = useMemo(
-    () => cycleBoundsForDisplay(displayGames, shortened),
-    [displayGames, shortened],
+  const maxCycle = useMemo(
+    () => effectiveMaxCycle(mode, shortened),
+    [mode, shortened],
   )
 
-  const cycleOptions = useMemo(() => {
-    const list: number[] = []
-    for (let c = minCycle; c <= maxCycle; c++) list.push(c)
-    return list
-  }, [minCycle, maxCycle])
-
   const cycle = useMemo(
-    () => clampCycleToDisplay(rawCycle, displayGames, shortened),
-    [rawCycle, displayGames, shortened],
+    () => clampCycle(rawCycle, actualGames, mode, shortened),
+    [rawCycle, actualGames, mode, shortened],
   )
 
   useEffect(() => {
     if (cycle !== rawCycle) setCycleText(String(cycle))
   }, [cycle, rawCycle])
 
+  const cycleOptions = useMemo(() => {
+    const list: number[] = []
+    for (let c = 1; c <= maxCycle; c++) list.push(c)
+    return list
+  }, [maxCycle])
+
   const input = useMemo(
-    () => ({ displayGames, cycle, shortened }),
-    [displayGames, cycle, shortened],
+    () => ({ actualGames, cycle, mode, shortened }),
+    [actualGames, cycle, mode, shortened],
   )
 
-  const result = useMemo(() => calculateKabaneri(input), [input])
-  const premises = useMemo(() => buildKabaneriPremises(input), [input])
+  const result = useMemo(() => calculateMonkey(input), [input])
+  const premises = useMemo(() => buildMonkeyPremises(input), [input])
 
   const closing = useMemo(
     () =>
@@ -81,13 +89,6 @@ export default function KabaneriUnatoPage() {
     [closingHours, result],
   )
 
-  const cycleHint =
-    minCycle > 1
-      ? `選択可能: ${minCycle}〜${maxCycle}周期目（表示${displayGames >= 300 ? '300' : '150'}G以上は${minCycle}周期目以降／150G→2周期・300G→3周期へ強制）`
-      : shortened
-        ? `選択可能: ${minCycle}〜${maxCycle}周期目（短縮時は最大4周期）`
-        : null
-
   return (
     <div className="app">
       <div className="bg-grid" aria-hidden />
@@ -97,22 +98,39 @@ export default function KabaneriUnatoPage() {
             HYENA SLOT
           </Link>
         </p>
-        <h1 className="machine-name">スマスロ甲鉄城のカバネリ 海門決戦</h1>
-        <p className="tagline">表示G・周期・短縮から天井狙いの期待値を確認</p>
+        <h1 className="machine-name">スマスロモンキーターンⅤ</h1>
+        <p className="tagline">実G・周期・モード・短縮から天井狙いの期待値を確認</p>
       </header>
 
       <main className="panel">
         <label className="field">
-          <span>表示G数</span>
+          <span>実G数</span>
           <input
             type="number"
             inputMode="numeric"
             min={0}
             max={999}
-            value={displayText}
-            onChange={(e) => setDisplayText(e.target.value)}
-            onBlur={() => setDisplayText(String(displayGames))}
+            value={actualText}
+            onChange={(e) => setActualText(e.target.value)}
+            onBlur={() => setActualText(String(actualGames))}
           />
+        </label>
+        <p className="inline-note">
+          データカウンター等の実G（AT間）。液晶の表示Gとは違うことがあります。
+        </p>
+
+        <label className="field">
+          <span>モード</span>
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value as MonkeyMode)}
+          >
+            {MODE_OPTIONS.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.label}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="field">
@@ -129,7 +147,14 @@ export default function KabaneriUnatoPage() {
           </select>
         </label>
 
-        {cycleHint && <p className="inline-note">{cycleHint}</p>}
+        {maxCycle < 6 && (
+          <p className="inline-note">
+            選択可能: 1〜{maxCycle}周期目
+            {shortened ? '（短縮時は最大4）' : ''}
+            {mode === 'B' ? '（モードBは最大3）' : ''}
+            {mode === 'heaven' ? '（天国は1周期天井）' : ''}
+          </p>
+        )}
 
         <label className="field">
           <span>短縮天井</span>
@@ -137,8 +162,8 @@ export default function KabaneriUnatoPage() {
             value={shortened ? 'on' : 'off'}
             onChange={(e) => setShortened(e.target.value === 'on')}
           >
-            <option value="off">なし（996G / 6周期）</option>
-            <option value="on">あり（596G / 4周期）</option>
+            <option value="off">なし（795G / 最大6周期）</option>
+            <option value="on">あり（495G / 最大4周期）</option>
           </select>
         </label>
 
@@ -149,9 +174,9 @@ export default function KabaneriUnatoPage() {
             <span>項目</span>
             <span>値</span>
           </div>
-          <ClosingCorrectionRows closing={closing} bonusLabel="ST" />
+          <ClosingCorrectionRows closing={closing} bonusLabel="AT" />
           <div className="result-row result-row-kaba">
-            <span className="mode">初当たり（ST）期待獲得出玉</span>
+            <span className="mode">初当たり（AT）期待獲得出玉</span>
             <span>{formatNum(result.expectedWinMedals, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
@@ -159,8 +184,12 @@ export default function KabaneriUnatoPage() {
             <span>{formatRate(result.tablePayoutRate)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">周期補正</span>
-            <span>{formatCorrectionPp(result.cycleCorrectionPp)}</span>
+            <span className="mode">周期・モード補正</span>
+            <span>
+              {mode === 'unknown'
+                ? '—（モード不明のため表のみ）'
+                : formatCorrectionPp(result.cycleCorrectionPp)}
+            </span>
           </div>
           <div className="result-row result-row-kaba">
             <span className="mode">平均G（補正後）</span>
@@ -174,23 +203,16 @@ export default function KabaneriUnatoPage() {
             <span className="mode">なな徹表・平均G</span>
             <span>{formatNum(result.tableAvgGames, 1)}G</span>
           </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">周期モデル・ST期待G</span>
-            <span>{formatNum(result.modelGamesToSt, 1)}G</span>
-          </div>
+          {result.modelGamesToAt != null && (
+            <div className="result-row result-row-kaba">
+              <span className="mode">周期モデル・AT期待G</span>
+              <span>{formatNum(result.modelGamesToAt, 1)}G</span>
+            </div>
+          )}
           <div className="result-row result-row-kaba">
             <span className="mode">G数天井残り</span>
             <span>{formatNum(result.remainingByG, 0)}G</span>
           </div>
-          {result.remainingToCycleG != null && (
-            <div className="result-row result-row-kaba">
-              <span className="mode">
-                周期規定Gまで（{cycle === 1 ? '150' : cycle === 2 ? '300' : '—'}
-                ）
-              </span>
-              <span>{formatNum(result.remainingToCycleG, 0)}G</span>
-            </div>
-          )}
           <div className="result-row result-row-kaba">
             <span className="mode">なな徹表・等価期待値</span>
             <span>{formatYen(result.tableYenEv)}</span>
@@ -208,7 +230,7 @@ export default function KabaneriUnatoPage() {
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・ST終了でヤメ／出玉率＝なな徹表＋周期補正→閉店補正
+            設定1固定・AT終了でヤメ／出玉率＝なな徹表＋周期補正→閉店補正
           </p>
           <ul>
             {premises.map((p) => (
@@ -223,7 +245,7 @@ export default function KabaneriUnatoPage() {
             ))}
           </ul>
           <p className="footnote">
-            期待出玉率＝なな徹表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の約603枚。周期モデル差は50%だけ反映。規定G直前の周期当選は減衰。BIG:REG=1:1（REGはST約20%）。天井到達時のみエピソード＝ST確定。表示Gは150/300で周期下限を強制（低Gの高周期はポイント先行として許可）。
+            期待出玉率＝なな徹表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の一定獲得。モード不明時は表のみ（保守）。ライバルモード・EXアイテムは落ち台では稀なため未入力。
           </p>
         </section>
       </main>

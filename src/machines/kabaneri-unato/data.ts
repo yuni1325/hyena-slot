@@ -75,6 +75,8 @@ export const PREMISES = {
   /** なな徹シミュは31.0、実戦系は31.4 */
   baseGamesPer50: 31.0,
   yenPerMedal: 20,
+  /** ST純増目安（枚/G）・閉店時の所要G概算用 */
+  pureInc: 4.0,
   ceilingG: { normal: 996, shortened: 596 },
   maxCycle: { normal: 6, shortened: 4 },
   /** 1・2周期の規定G天井（表示G） */

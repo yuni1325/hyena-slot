@@ -16,6 +16,8 @@ export type ModeResult = {
   reachable: boolean
   /** 期待出玉率（％）。到達不可時は null */
   expectedPayoutRate: number | null
+  /** 初当たり1回あたりの期待獲得出玉（AT/ST・枚。CZではない） */
+  expectedWinMedals: number | null
   /** 初当たりまでの平均G */
   avgGames: number | null
   /** 初当たりまでの平均投資枚数 */

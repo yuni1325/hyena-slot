@@ -1,7 +1,15 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { machines, type ModeResult } from '../machines'
+import ClosingCorrectionRows from '../components/ClosingCorrectionRows'
+import ClosingHoursField from '../components/ClosingHoursField'
+import {
+  applyClosingCorrection,
+  DEFAULT_CLOSING_HOURS,
+  type ClosingHours,
+} from '../lib/closingCorrection'
 import { formatNum, formatRate, rateTone } from '../lib/format'
+import { machines, type ModeResult } from '../machines'
+import { PREMISES } from '../machines/hokuto-tensei2/data'
 
 const MAX_ABESHI = 1536
 
@@ -10,6 +18,9 @@ export default function HokutoTensei2Page() {
   const [abeshiText, setAbeshiText] = useState('0')
   const [phase, setPhase] = useState(machine.phases?.[0]?.id ?? 'afterAt')
   const [shutter, setShutter] = useState(false)
+  const [closingHours, setClosingHours] = useState<ClosingHours>(
+    DEFAULT_CLOSING_HOURS,
+  )
   const shutterOn = Boolean(machine.hasShutterOption && shutter)
 
   const currentAbeshi = useMemo(() => {
@@ -29,6 +40,38 @@ export default function HokutoTensei2Page() {
   )
 
   const showStay = !shutterOn && results.some((r) => r.stayProbability != null)
+
+  const blend = results.find((r) => r.modeId === 'blend') ?? results[0]
+
+  const closing = useMemo(
+    () =>
+      applyClosingCorrection({
+        hoursUntilClose: closingHours,
+        avgGamesToHit: blend?.avgGames ?? null,
+        expectedWinMedals: blend?.expectedWinMedals ?? null,
+        pureIncPerGame: PREMISES.pureInc,
+        rawPayoutRate: blend?.expectedPayoutRate ?? null,
+      }),
+    [closingHours, blend],
+  )
+
+  const displayResults = useMemo(
+    () =>
+      results.map((r) => {
+        const c = applyClosingCorrection({
+          hoursUntilClose: closingHours,
+          avgGamesToHit: r.avgGames,
+          expectedWinMedals: r.expectedWinMedals,
+          pureIncPerGame: PREMISES.pureInc,
+          rawPayoutRate: r.expectedPayoutRate,
+        })
+        return {
+          ...r,
+          expectedPayoutRate: c.correctedPayoutRate,
+        }
+      }),
+    [results, closingHours],
+  )
 
   return (
     <div className="app">
@@ -83,6 +126,20 @@ export default function HokutoTensei2Page() {
           />
         </label>
 
+        <ClosingHoursField value={closingHours} onChange={setClosingHours} />
+
+        <section className="results" aria-label="閉店補正・初当たり">
+          <div className="results-head results-head-kaba">
+            <span>項目</span>
+            <span>値</span>
+          </div>
+          <ClosingCorrectionRows closing={closing} bonusLabel="AT" />
+          <div className="result-row result-row-kaba">
+            <span className="mode">初当たり（AT）期待獲得出玉</span>
+            <span>{formatNum(blend?.expectedWinMedals, 1)}枚</span>
+          </div>
+        </section>
+
         <section
           className={`results ${showStay ? 'with-stay' : ''}`}
           aria-label="計算結果"
@@ -90,11 +147,11 @@ export default function HokutoTensei2Page() {
           <div className="results-head">
             <span>{shutterOn ? '条件' : 'モード'}</span>
             {showStay && <span>滞在率</span>}
-            <span>期待出玉率</span>
+            <span>出玉率(閉店後)</span>
             <span>平均G</span>
             <span>平均投資</span>
           </div>
-          {results.map((r) => (
+          {displayResults.map((r) => (
             <div
               key={r.modeId}
               className={`result-row tone-${rateTone(r.expectedPayoutRate)}${
@@ -131,6 +188,9 @@ export default function HokutoTensei2Page() {
               </li>
             ))}
           </ul>
+          <p className="footnote">
+            モード別出玉率は閉店補正後。上段の時間・係数は加重（または先頭）行基準。
+          </p>
         </section>
       </main>
     </div>

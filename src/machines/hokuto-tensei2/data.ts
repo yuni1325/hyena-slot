@@ -121,6 +121,8 @@ export const PREMISES = {
   firstHitDenom: 366.0,
   payoutRate: 97.6,
   baseGamesPer50: 31.5,
+  /** AT純増目安（枚/G）・閉店時の所要G概算用 */
+  pureInc: 3.0,
   /**
    * 1Gあたりあべし増加（天破均し込み）
    * 人生期待値論ノートが用いる実務値 1.8

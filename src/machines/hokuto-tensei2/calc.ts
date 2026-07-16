@@ -29,6 +29,7 @@ function toResult(
       modeLabel,
       reachable: false,
       expectedPayoutRate: null,
+      expectedWinMedals: PREMISES.avgWinMedals,
       avgGames: null,
       avgInvestment: null,
       expectedRemainingAbeshi: remaining,
@@ -46,6 +47,7 @@ function toResult(
     modeLabel,
     reachable: true,
     expectedPayoutRate,
+    expectedWinMedals: PREMISES.avgWinMedals,
     avgGames,
     avgInvestment,
     expectedRemainingAbeshi: remaining,
@@ -169,7 +171,7 @@ export function buildPremises(
         : '各モードの期待値を個別表示。滞在率は公開のモード移行率',
     },
     {
-      label: '初当たり1回あたり平均獲得枚数',
+      label: '初当たり（AT）期待獲得出玉',
       value: `${PREMISES.avgWinMedals}枚`,
       basis:
         '人生期待値論ノート（たらればさん参照）。機械割逆算554.6枚とほぼ同値',

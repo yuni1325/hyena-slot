@@ -19,10 +19,42 @@ export type KabaneriInput = {
   shortened: boolean
 }
 
+/**
+ * 表示Gと強制周期進行の整合。
+ * DMM: 150G消化で2周期目へ、300G消化で3周期目へ強制。
+ * （ポイントで先に進むのは可＝低G＋高周期は許可）
+ */
+export function cycleBoundsForDisplay(
+  displayGames: number,
+  shortened: boolean,
+): { minCycle: number; maxCycle: number } {
+  const g = Math.max(0, Math.floor(displayGames))
+  const maxCycle = shortened
+    ? PREMISES.maxCycle.shortened
+    : PREMISES.maxCycle.normal
+  let minCycle = 1
+  if (g >= 300) minCycle = 3
+  else if (g >= 150) minCycle = 2
+  return { minCycle: Math.min(minCycle, maxCycle), maxCycle }
+}
+
+export function clampCycleToDisplay(
+  cycle: number,
+  displayGames: number,
+  shortened: boolean,
+): number {
+  const { minCycle, maxCycle } = cycleBoundsForDisplay(displayGames, shortened)
+  const c = Math.floor(cycle)
+  if (!Number.isFinite(c)) return minCycle
+  return Math.min(maxCycle, Math.max(minCycle, c))
+}
+
 export type KabaneriResult = {
   reachable: boolean
   /** 主表示：なな徹表 + 周期補正（抑制済み） */
   expectedPayoutRate: number | null
+  /** 初当たり1回あたりの期待獲得出玉（ST・枚。CZではない） */
+  expectedWinMedals: number | null
   /** なな徹表のみの出玉率 */
   tablePayoutRate: number | null
   /** 周期補正（pt）＝ expected − table */
@@ -196,6 +228,7 @@ export function calculateKabaneri(input: KabaneriInput): KabaneriResult {
     return {
       reachable: false,
       expectedPayoutRate: null,
+      expectedWinMedals: winMedals,
       tablePayoutRate,
       cycleCorrectionPp: null,
       avgGames: null,
@@ -231,6 +264,7 @@ export function calculateKabaneri(input: KabaneriInput): KabaneriResult {
   return {
     reachable: true,
     expectedPayoutRate,
+    expectedWinMedals: winMedals,
     tablePayoutRate,
     cycleCorrectionPp,
     avgGames,
@@ -266,9 +300,9 @@ export function buildKabaneriPremises(input: KabaneriInput): Premise[] {
         '周期未考慮の表をベースにし、周期条件は補正として加味（補正スケール50%）',
     },
     {
-      label: '獲得枚数（分子）',
+      label: '初当たり（ST）期待獲得出玉（分子）',
       value: `${PREMISES.tableWinMedals.toFixed(2)}枚（なな徹表・一定）`,
-      basis: `表の invest+期待値 から逆算。実践ST平均 ${PREMISES.practiceWinMedals}枚（flick7）は参考のみ`,
+      basis: `表の invest+期待値 から逆算。実践ST平均 ${PREMISES.practiceWinMedals}枚（flick7）は参考のみ。CZは初当たりに含めない`,
     },
     {
       label: '設定',
