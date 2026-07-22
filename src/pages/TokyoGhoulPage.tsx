@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import BackToHomeButton from '../components/BackToHomeButton'
 import ClosingCorrectionRows from '../components/ClosingCorrectionRows'
 import ClosingHoursField from '../components/ClosingHoursField'
 import {
@@ -74,6 +75,7 @@ export default function TokyoGhoulPage() {
     <div className="app">
       <div className="bg-grid" aria-hidden />
       <header className="hero">
+        <BackToHomeButton />
         <p className="brand">
           <Link to="/" className="brand-link">
             HYENA SLOT
@@ -139,7 +141,12 @@ export default function TokyoGhoulPage() {
             <span>項目</span>
             <span>値</span>
           </div>
-          <ClosingCorrectionRows closing={closing} bonusLabel="AT" />
+          <ClosingCorrectionRows
+            closing={closing}
+            bonusLabel="AT"
+            machineId="tokyo-ghoul"
+            pureIncPerGame={PREMISES.pureInc}
+          />
           <div className="result-row result-row-kaba">
             <span className="mode">初当たり（AT）期待獲得出玉</span>
             <span>{formatNum(result.expectedWinMedals, 1)}枚</span>
@@ -227,6 +234,7 @@ export default function TokyoGhoulPage() {
             実GはAT間1200G、表示GはCZ間（モード別）。通常C・天国系は専用表がないため、天井までの残りGが同じ通常600表の位置で近似（ゾーン優遇は未反映でやや保守）。スイカ加算はなな徹表側でも未考慮。出玉率は閉店余裕でさらに保守補正。
           </p>
         </section>
+        <BackToHomeButton footer />
       </main>
     </div>
   )

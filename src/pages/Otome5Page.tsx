@@ -13,14 +13,16 @@ import {
   formatNum,
   formatRate,
   formatYen,
+  rateTone,
 } from '../lib/format'
 import {
-  buildMonkeyPremises,
-  calculateMonkey,
+  buildOtome5Premises,
+  calculateOtome5,
   clampCycle,
   effectiveMaxCycle,
-} from '../machines/monkey-turn-v/calc'
-import { PREMISES, type MonkeyMode } from '../machines/monkey-turn-v/data'
+  type Otome5ScenarioResult,
+} from '../machines/otome5/calc'
+import { PREMISES } from '../machines/otome5/data'
 
 function parseIntSafe(text: string, fallback = 0): number {
   const n = Number(text)
@@ -28,36 +30,27 @@ function parseIntSafe(text: string, fallback = 0): number {
   return Math.floor(n)
 }
 
-const MODE_OPTIONS: { id: MonkeyMode; label: string }[] = [
-  { id: 'unknown', label: '不明（なな徹表のみ）' },
-  { id: 'A', label: 'モードA（最大6周期）' },
-  { id: 'B', label: 'モードB（最大3周期）' },
-  { id: 'heaven', label: '天国（1周期）' },
-]
-
-export default function MonkeyTurnVPage() {
+export default function Otome5Page() {
   const [actualText, setActualText] = useState('0')
+  const [displayText, setDisplayText] = useState('0')
   const [cycleText, setCycleText] = useState('1')
-  const [mode, setMode] = useState<MonkeyMode>('unknown')
   const [shortened, setShortened] = useState(false)
   const [closingHours, setClosingHours] = useState<ClosingHours>(
     DEFAULT_CLOSING_HOURS,
   )
 
   const actualGames = useMemo(() => parseIntSafe(actualText), [actualText])
+  const displayGames = useMemo(() => parseIntSafe(displayText), [displayText])
   const rawCycle = useMemo(() => {
     const n = parseIntSafe(cycleText, 1)
     return Math.min(6, Math.max(1, n))
   }, [cycleText])
 
-  const maxCycle = useMemo(
-    () => effectiveMaxCycle(mode, shortened),
-    [mode, shortened],
-  )
+  const maxCycle = useMemo(() => effectiveMaxCycle(shortened), [shortened])
 
   const cycle = useMemo(
-    () => clampCycle(rawCycle, actualGames, mode, shortened),
-    [rawCycle, actualGames, mode, shortened],
+    () => clampCycle(rawCycle, shortened),
+    [rawCycle, shortened],
   )
 
   useEffect(() => {
@@ -71,12 +64,12 @@ export default function MonkeyTurnVPage() {
   }, [maxCycle])
 
   const input = useMemo(
-    () => ({ actualGames, cycle, mode, shortened }),
-    [actualGames, cycle, mode, shortened],
+    () => ({ actualGames, displayGames, cycle, shortened }),
+    [actualGames, displayGames, cycle, shortened],
   )
 
-  const result = useMemo(() => calculateMonkey(input), [input])
-  const premises = useMemo(() => buildMonkeyPremises(input), [input])
+  const result = useMemo(() => calculateOtome5(input), [input])
+  const premises = useMemo(() => buildOtome5Premises(input), [input])
 
   const closing = useMemo(
     () =>
@@ -90,6 +83,26 @@ export default function MonkeyTurnVPage() {
     [closingHours, result],
   )
 
+  const withClosing = useMemo(() => {
+    const mapRow = (s: Otome5ScenarioResult) => {
+      const c = applyClosingCorrection({
+        hoursUntilClose: closingHours,
+        avgGamesToHit: s.avgGames,
+        expectedWinMedals: result.expectedWinMedals,
+        pureIncPerGame: PREMISES.pureInc,
+        rawPayoutRate: s.expectedPayoutRate,
+      })
+      return {
+        ...s,
+        closedRate: c.correctedPayoutRate,
+      }
+    }
+    return {
+      byTable: result.byTable.map(mapRow),
+      byMode: result.byMode.map(mapRow),
+    }
+  }, [closingHours, result])
+
   return (
     <div className="app">
       <div className="bg-grid" aria-hidden />
@@ -100,8 +113,12 @@ export default function MonkeyTurnVPage() {
             HYENA SLOT
           </Link>
         </p>
-        <h1 className="machine-name">スマスロモンキーターンⅤ</h1>
-        <p className="tagline">実G・周期・モード・短縮から天井狙いの期待値を確認</p>
+        <h1 className="machine-name">
+          L戦国乙女5 業火を穿つ宿焔の双刃
+        </h1>
+        <p className="tagline">
+          実G・表示G・周期から天井狙いの期待値を確認
+        </p>
       </header>
 
       <main className="panel">
@@ -111,29 +128,31 @@ export default function MonkeyTurnVPage() {
             type="number"
             inputMode="numeric"
             min={0}
-            max={999}
+            max={1100}
             value={actualText}
             onChange={(e) => setActualText(e.target.value)}
             onBlur={() => setActualText(String(actualGames))}
           />
         </label>
         <p className="inline-note">
-          データカウンター等の実G（AT間）。液晶の表示Gとは違うことがあります。
+          AT間の実ゲーム数。強カワチャンスによる加算は含まない（天井カウント対象）。
         </p>
 
         <label className="field">
-          <span>モード</span>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value as MonkeyMode)}
-          >
-            {MODE_OPTIONS.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
+          <span>表示G数</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={550}
+            value={displayText}
+            onChange={(e) => setDisplayText(e.target.value)}
+            onBlur={() => setDisplayText(String(displayGames))}
+          />
         </label>
+        <p className="inline-note">
+          液晶左部の当該周期内ゲーム数（加算込み）。1周期最大500G+α。
+        </p>
 
         <label className="field">
           <span>現在周期</span>
@@ -148,13 +167,9 @@ export default function MonkeyTurnVPage() {
             ))}
           </select>
         </label>
-
-        {maxCycle < 6 && (
+        {shortened && (
           <p className="inline-note">
-            選択可能: 1〜{maxCycle}周期目
-            {shortened ? '（短縮時は最大4）' : ''}
-            {mode === 'B' ? '（モードBは最大3）' : ''}
-            {mode === 'heaven' ? '（天国は1周期天井）' : ''}
+            選択可能: 1〜{maxCycle}周期目（短縮時は最大4）
           </p>
         )}
 
@@ -164,8 +179,8 @@ export default function MonkeyTurnVPage() {
             value={shortened ? 'on' : 'off'}
             onChange={(e) => setShortened(e.target.value === 'on')}
           >
-            <option value="off">なし（795G / 最大6周期）</option>
-            <option value="on">あり（495G / 最大4周期）</option>
+            <option value="off">なし（実G999 / 最大6周期）</option>
+            <option value="on">あり（実G650 / 最大4周期）</option>
           </select>
         </label>
 
@@ -179,7 +194,7 @@ export default function MonkeyTurnVPage() {
           <ClosingCorrectionRows
             closing={closing}
             bonusLabel="AT"
-            machineId="monkey-turn-v"
+            machineId="otome5"
             pureIncPerGame={PREMISES.pureInc}
           />
           <div className="result-row result-row-kaba">
@@ -191,12 +206,8 @@ export default function MonkeyTurnVPage() {
             <span>{formatRate(result.tablePayoutRate)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">周期・モード補正</span>
-            <span>
-              {mode === 'unknown'
-                ? '—（モード不明のため表のみ）'
-                : formatCorrectionPp(result.cycleCorrectionPp)}
-            </span>
+            <span className="mode">周期補正</span>
+            <span>{formatCorrectionPp(result.cycleCorrectionPp)}</span>
           </div>
           <div className="result-row result-row-kaba">
             <span className="mode">平均G（補正後）</span>
@@ -210,15 +221,17 @@ export default function MonkeyTurnVPage() {
             <span className="mode">なな徹表・平均G</span>
             <span>{formatNum(result.tableAvgGames, 1)}G</span>
           </div>
-          {result.modelGamesToAt != null && (
-            <div className="result-row result-row-kaba">
-              <span className="mode">周期モデル・AT期待G</span>
-              <span>{formatNum(result.modelGamesToAt, 1)}G</span>
-            </div>
-          )}
           <div className="result-row result-row-kaba">
-            <span className="mode">G数天井残り</span>
+            <span className="mode">周期モデル・AT期待G</span>
+            <span>{formatNum(result.modelGamesToAt, 1)}G</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">実G天井残り</span>
             <span>{formatNum(result.remainingByG, 0)}G</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">当該周期・表示G残り目安</span>
+            <span>{formatNum(result.remainingInCycleDisplay, 0)}G</span>
           </div>
           <div className="result-row result-row-kaba">
             <span className="mode">なな徹表・等価期待値</span>
@@ -234,10 +247,58 @@ export default function MonkeyTurnVPage() {
           </div>
         </section>
 
+        <h2 className="results-section-title">周期テーブル別（閉店補正後）</h2>
+        <p className="inline-note">
+          1周期目は引き戻し確定で残りを計算。天井周期のみテーブル差。現在周期がテーブル天井超なら到達不可。
+        </p>
+        <section className="results" aria-label="周期テーブル別">
+          <div className="results-head results-head-scenario">
+            <span>テーブル</span>
+            <span>出玉率</span>
+            <span>平均G</span>
+            <span>周期天井</span>
+          </div>
+          {withClosing.byTable.map((r) => (
+            <div
+              key={r.id}
+              className={`result-row result-row-scenario tone-${rateTone(r.closedRate)}`}
+            >
+              <span className="mode">{r.label}</span>
+              <span className="rate">{formatRate(r.closedRate)}</span>
+              <span>{formatNum(r.avgGames, 1)}G</span>
+              <span>{r.maxCycle}周期</span>
+            </div>
+          ))}
+        </section>
+
+        <h2 className="results-section-title">周期モード別（閉店補正後）</h2>
+        <p className="inline-note">
+          当該周期残り＝モード上限−表示G。以降周期は同モード平均到達で継続想定。
+        </p>
+        <section className="results" aria-label="周期モード別">
+          <div className="results-head results-head-scenario">
+            <span>モード</span>
+            <span>出玉率</span>
+            <span>平均G</span>
+            <span>周期残り</span>
+          </div>
+          {withClosing.byMode.map((r) => (
+            <div
+              key={r.id}
+              className={`result-row result-row-scenario tone-${rateTone(r.closedRate)}`}
+            >
+              <span className="mode">{r.label}</span>
+              <span className="rate">{formatRate(r.closedRate)}</span>
+              <span>{formatNum(r.avgGames, 1)}G</span>
+              <span>{formatNum(r.remainingInCycleDisplay, 0)}G</span>
+            </div>
+          ))}
+        </section>
+
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・AT終了でヤメ／出玉率＝なな徹表＋周期補正→閉店補正
+            設定1固定・AT終了即ヤメ／出玉率＝なな徹表＋周期補正→閉店補正（暫定表）
           </p>
           <ul>
             {premises.map((p) => (
@@ -252,7 +313,7 @@ export default function MonkeyTurnVPage() {
             ))}
           </ul>
           <p className="footnote">
-            期待出玉率＝なな徹表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の一定獲得。モード不明時は表のみ（保守）。ライバルモード・EXアイテムは落ち台では稀なため未入力。
+            1周期目の主表示・テーブル別は引き戻し確定（最大200G）。モード別一覧は各モード仮定の内訳。なな徹期待値は暫定版。
           </p>
         </section>
         <BackToHomeButton footer />

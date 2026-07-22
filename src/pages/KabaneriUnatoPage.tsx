@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import BackToHomeButton from '../components/BackToHomeButton'
 import ClosingCorrectionRows from '../components/ClosingCorrectionRows'
 import ClosingHoursField from '../components/ClosingHoursField'
 import {
@@ -92,6 +93,7 @@ export default function KabaneriUnatoPage() {
     <div className="app">
       <div className="bg-grid" aria-hidden />
       <header className="hero">
+        <BackToHomeButton />
         <p className="brand">
           <Link to="/" className="brand-link">
             HYENA SLOT
@@ -149,7 +151,12 @@ export default function KabaneriUnatoPage() {
             <span>項目</span>
             <span>値</span>
           </div>
-          <ClosingCorrectionRows closing={closing} bonusLabel="ST" />
+          <ClosingCorrectionRows
+            closing={closing}
+            bonusLabel="ST"
+            machineId="kabaneri-unato"
+            pureIncPerGame={PREMISES.pureInc}
+          />
           <div className="result-row result-row-kaba">
             <span className="mode">初当たり（ST）期待獲得出玉</span>
             <span>{formatNum(result.expectedWinMedals, 1)}枚</span>
@@ -226,6 +233,7 @@ export default function KabaneriUnatoPage() {
             期待出玉率＝なな徹表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の約603枚。周期モデル差は50%だけ反映。規定G直前の周期当選は減衰。BIG:REG=1:1（REGはST約20%）。天井到達時のみエピソード＝ST確定。表示Gは150/300で周期下限を強制（低Gの高周期はポイント先行として許可）。
           </p>
         </section>
+        <BackToHomeButton footer />
       </main>
     </div>
   )

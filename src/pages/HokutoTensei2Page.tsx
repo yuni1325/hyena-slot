@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import BackToHomeButton from '../components/BackToHomeButton'
 import ClosingCorrectionRows from '../components/ClosingCorrectionRows'
 import ClosingHoursField from '../components/ClosingHoursField'
 import {
@@ -77,6 +78,7 @@ export default function HokutoTensei2Page() {
     <div className="app">
       <div className="bg-grid" aria-hidden />
       <header className="hero">
+        <BackToHomeButton />
         <p className="brand">
           <Link to="/" className="brand-link">
             HYENA SLOT
@@ -133,7 +135,12 @@ export default function HokutoTensei2Page() {
             <span>項目</span>
             <span>値</span>
           </div>
-          <ClosingCorrectionRows closing={closing} bonusLabel="AT" />
+          <ClosingCorrectionRows
+            closing={closing}
+            bonusLabel="AT"
+            machineId="hokuto-tensei2"
+            pureIncPerGame={PREMISES.pureInc}
+          />
           <div className="result-row result-row-kaba">
             <span className="mode">初当たり（AT）期待獲得出玉</span>
             <span>{formatNum(blend?.expectedWinMedals, 1)}枚</span>
@@ -192,6 +199,7 @@ export default function HokutoTensei2Page() {
             モード別出玉率は閉店補正後。上段の時間・係数は加重（または先頭）行基準。
           </p>
         </section>
+        <BackToHomeButton footer />
       </main>
     </div>
   )

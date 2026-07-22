@@ -35,4 +35,18 @@ export const machineCards: MachineCard[] = [
     shortName: '東京喰種',
     blurb: '実GのAT天井と表示GのCZ天井、両方から期待出玉率を算出',
   },
+  {
+    id: 'otome5',
+    path: '/machines/otome5',
+    name: 'L戦国乙女5 業火を穿つ宿焔の双刃',
+    shortName: '戦国乙女5',
+    blurb: '実G・表示G・周期から期待出玉率を算出（G数天井＋周期）',
+  },
+  {
+    id: 'sao2',
+    path: '/machines/sao2',
+    name: 'スロット ソードアート・オンラインⅡ',
+    shortName: 'SAO2',
+    blurb: 'AT間実GとCZ間（実G・表示G・モード）から期待出玉率を算出',
+  },
 ]

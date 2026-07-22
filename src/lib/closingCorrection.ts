@@ -1,6 +1,12 @@
 /**
  * 閉店時間による出玉率の保守補正。
  * 目安: 閉店1時間前（残り約650G）が最後のうちはじめ。
+ *
+ * 補正の考え方（保守）:
+ * - 初当までのGは平均 avgG の指数分布 → 閉店までに当たる確率 pHit = 1−e^(−A/μ)
+ * - 当たっても「平均より遅い」時刻で当たったと仮定し、残Gで AT/ST 完走率を落とす
+ * - AT/ST所要Gにもバッファを乗せる
+ * → factor = pHit × atCompleteFrac（期待獲得出玉も同率で減衰）
  */
 
 export const CLOSING_GAMES_PER_HOUR = 650
@@ -12,8 +18,10 @@ export type ClosingHours = (typeof CLOSING_HOURS_OPTIONS)[number]
 
 export const DEFAULT_CLOSING_HOURS: ClosingHours = 2
 
-/** フル評価に必要なバッファ（平均＋αを保守側に） */
-const SAFETY_BUFFER = 1.1
+/** 初当を平均より遅く見積もる（保守） */
+const HIT_LATE_BIAS = 1.2
+/** AT/ST所要Gの余裕（保守） */
+const AT_BUFFER = 1.15
 
 export type ClosingCorrectionInput = {
   hoursUntilClose: number
@@ -39,8 +47,14 @@ export type ClosingCorrection = {
   /** 初当たり平均後に回せる残り時間（分）・G */
   minutesForAtSt: number | null
   gamesForAtSt: number | null
-  /** 0〜1。必要G（平均初当＋AT/ST）×バッファに対する余裕 */
+  /** 閉店までに初当する確率（指数待ち） */
+  hitProbability: number
+  /** 遅当たり仮定での AT/ST 完走率 */
+  atCompleteFraction: number
+  /** 0〜1。pHit × at完走率 */
   closingFactor: number
+  /** 閉店補正後の期待獲得出玉 */
+  correctedWinMedals: number | null
   rawPayoutRate: number | null
   correctedPayoutRate: number | null
 }
@@ -69,7 +83,10 @@ export function applyClosingCorrection(
     atStMinutesNeeded: null,
     minutesForAtSt: null,
     gamesForAtSt: null,
+    hitProbability: 0,
+    atCompleteFraction: 0,
     closingFactor: 0,
+    correctedWinMedals: null,
     rawPayoutRate: input.rawPayoutRate,
     correctedPayoutRate: null,
   }
@@ -79,7 +96,7 @@ export function applyClosingCorrection(
   const pure = input.pureIncPerGame
   const raw = input.rawPayoutRate
 
-  if (avgG == null || avgG < 0 || win == null || win <= 0 || pure <= 0) {
+  if (avgG == null || avgG <= 0 || win == null || win <= 0 || pure <= 0) {
     return base
   }
 
@@ -89,13 +106,23 @@ export function applyClosingCorrection(
   const gamesForAtSt = Math.max(0, availableGames - avgG)
   const minutesForAtSt = gamesToMinutes(gamesForAtSt)
 
-  // 保守: 初当平均G + AT/ST所要G に 10%バッファを乗せた必要量に対する充足率
-  const needGames = (avgG + atStGames) * SAFETY_BUFFER
-  const closingFactor =
-    needGames <= 0 ? 0 : Math.max(0, Math.min(1, availableGames / needGames))
+  // ① 閉店までに初当する確率（指数分布・平均 avgG）
+  const hitProbability = 1 - Math.exp(-availableGames / avgG)
 
-  const correctedPayoutRate =
-    raw == null ? null : raw * closingFactor
+  // ② 当たっても平均×1.2 で当たったと仮定し、AT/ST所要×1.15 に対する完走率
+  const assumedHitG = avgG * HIT_LATE_BIAS
+  const gamesLeftAfterLateHit = Math.max(0, availableGames - assumedHitG)
+  const atNeed = atStGames * AT_BUFFER
+  const atCompleteFraction =
+    atNeed <= 0 ? 0 : Math.max(0, Math.min(1, gamesLeftAfterLateHit / atNeed))
+
+  const closingFactor = Math.max(
+    0,
+    Math.min(1, hitProbability * atCompleteFraction),
+  )
+
+  const correctedWinMedals = win * closingFactor
+  const correctedPayoutRate = raw == null ? null : raw * closingFactor
 
   return {
     ...base,
@@ -104,7 +131,10 @@ export function applyClosingCorrection(
     atStMinutesNeeded,
     minutesForAtSt,
     gamesForAtSt,
+    hitProbability,
+    atCompleteFraction,
     closingFactor,
+    correctedWinMedals,
     correctedPayoutRate,
   }
 }
