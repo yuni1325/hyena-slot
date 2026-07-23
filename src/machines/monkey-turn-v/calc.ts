@@ -140,6 +140,7 @@ function expectedGamesUntilOrCap(p: number, t: number): number {
  * モード既知時の周期経路AT期待G。
  * 当該周期残り＝表示Gベース（1周期目ハード222）、以降は平均到達。
  * 周期AT率（◎○△）とG数天井の競合を考慮。
+ * 通常Bは天井2周期65%／3周期35%の事前混合（3周期到達時は後者のみ）。
  */
 export function expectedGamesToAtModel(
   cycle: number,
@@ -148,20 +149,72 @@ export function expectedGamesToAtModel(
   mode: Exclude<MonkeyMode, 'unknown'>,
   shortened: boolean,
 ): number {
-  const ceilingG = shortened
-    ? PREMISES.ceilingG.shortened
-    : PREMISES.ceilingG.normal
+  if (mode === 'B' && !shortened) {
+    // 設定1の振り分けは事前分布。観測周期で条件付けする。
+    // 3周期目に到達している＝2周期天井側（65%）は既にAT済みなので除外し、
+    // 3周期天井側（35%）のみを使う。そうしないと cycle>max でG数天井残りまで悪化する。
+    if (cycle >= 3) {
+      return expectedGamesToAtModelFixedMax(
+        cycle,
+        actualGames,
+        displayGames,
+        'B',
+        shortened,
+        3,
+      )
+    }
+    const w2 = PREMISES.modeBCeilingSplit.cycle2
+    const w3 = PREMISES.modeBCeilingSplit.cycle3
+    const e2 = expectedGamesToAtModelFixedMax(
+      cycle,
+      actualGames,
+      displayGames,
+      'B',
+      shortened,
+      2,
+    )
+    const e3 = expectedGamesToAtModelFixedMax(
+      cycle,
+      actualGames,
+      displayGames,
+      'B',
+      shortened,
+      3,
+    )
+    return w2 * e2 + w3 * e3
+  }
   const maxCycle = Math.min(
     PREMISES.modeMaxCycle[mode],
     shortened ? PREMISES.maxCycle.shortened : PREMISES.maxCycle.normal,
   )
+  return expectedGamesToAtModelFixedMax(
+    cycle,
+    actualGames,
+    displayGames,
+    mode,
+    shortened,
+    maxCycle,
+  )
+}
+
+function expectedGamesToAtModelFixedMax(
+  cycle: number,
+  actualGames: number,
+  displayGames: number,
+  mode: Exclude<MonkeyMode, 'unknown'>,
+  shortened: boolean,
+  maxCycle: number,
+): number {
+  const ceilingG = shortened
+    ? PREMISES.ceilingG.shortened
+    : PREMISES.ceilingG.normal
   const remGCap = Math.max(0, ceilingG - actualGames)
   if (remGCap <= 0) return 0
+  if (cycle > maxCycle) return remGCap
 
   const rates = PREMISES.cycleAtRate[mode]
   const c0 = Math.min(Math.max(1, Math.floor(cycle)), maxCycle)
   const pAtPerGame = 1 / PREMISES.atHitDenom
-  // CZ超抜・直撃の薄い寄与（表に織込み分の一部を周期モデル側にも）
   const pThin = pAtPerGame * 0.35
 
   let survive = 1
@@ -244,13 +297,7 @@ function scenarioForMode(
     shortened,
   )
   const scale = PREMISES.cycleCorrectionScale
-  let avgGames = tableAvgGames + (modelGames - tableAvgGames) * scale
-  // 表が主軸。周期補正は±数％以内に抑える（2周期◎だけで101%に跳ねないように）
-  if (avgGames < tableAvgGames) {
-    avgGames = Math.max(avgGames, tableAvgGames * PREMISES.cycleImproveCap)
-  } else if (avgGames > tableAvgGames) {
-    avgGames = Math.min(avgGames, tableAvgGames * PREMISES.cycleWorsenCap)
-  }
+  const avgGames = tableAvgGames + (modelGames - tableAvgGames) * scale
   const avgInvestment = avgGames * mPerG
   const expectedPayoutRate =
     avgInvestment > 0 ? (winMedals / avgInvestment) * 100 : null
@@ -415,7 +462,7 @@ export function buildMonkeyPremises(input: MonkeyInput): Premise[] {
       label: '出玉率の主軸',
       value: 'web情報表＋周期・表示G補正（通常A既定）',
       basis:
-        '表は周期未考慮。モード不明は通常A。B・天国は下部参考。周期補正は表の±数％に抑制',
+        '表は周期未考慮。モード不明は通常A。B・天国は下部参考。周期補正は表との差の35%を反映。Bの2/3周期振り分けは観測周期で条件付け',
     },
     {
       label: '初当たり（AT）期待獲得出玉（分子）',

@@ -93,6 +93,7 @@ export const PREMISES = {
   /**
    * 周期到達時のAT当選率。
    * ◎≈25% / ○≈3% / △≈1% / 「-」≈0% / 天井=100%
+   * 通常Bは天井周期の振り分け（設定1: 2周期65% / 3周期35%）を事前分布としてモデル化（3周期到達時は後者のみ）
    */
   cycleAtRate: {
     A: { 1: 0, 2: 0.25, 3: 0.01, 4: 0.03, 5: 0.25, 6: 1 },
@@ -100,14 +101,15 @@ export const PREMISES = {
     heaven: { 1: 1 },
   } as Record<Exclude<MonkeyMode, 'unknown'>, Record<number, number>>,
   /**
-   * 表と周期モデルのブレンド。
-   * 表が主軸（周期未考慮）。改善・悪化とも表から大きく乖離させない。
+   * 通常B・天井周期振り分け（設定1・事前）。
+   * 計算時は観測周期で条件付け（3周期到達時は cycle3 のみ）。
    */
-  cycleCorrectionScale: 0.2,
-  /** 周期補正で表より平均Gを縮める下限（改善のキャップ） */
-  cycleImproveCap: 0.97,
-  /** 周期補正で表より平均Gを伸ばす上限（悪化のキャップ） */
-  cycleWorsenCap: 1.05,
+  modeBCeilingSplit: { cycle2: 0.65, cycle3: 0.35 } as const,
+  /**
+   * 表と周期モデルのブレンド。
+   * 表が主軸。モード差（A/B/天国）が潰れる強い上下限キャップは使わない。
+   */
+  cycleCorrectionScale: 0.35,
 } as const
 
 export function medalsPerGame(): number {
