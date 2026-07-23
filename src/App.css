@@ -435,3 +435,95 @@ body {
     font-weight: 600;
   }
 }
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.field-inline > span {
+  flex: 0 0 auto;
+  min-width: 3.5rem;
+}
+
+.monkey-chart {
+  margin: 1.25rem 0 1.75rem;
+}
+
+.monkey-chart-toolbar {
+  margin-bottom: 0.35rem;
+}
+
+.monkey-chart-frame {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  overflow-x: auto;
+}
+
+.monkey-chart-frame svg {
+  display: block;
+  width: 100%;
+  min-width: 320px;
+  height: auto;
+}
+
+.monkey-chart-grid {
+  stroke: var(--line);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.monkey-chart-ref {
+  stroke: var(--good);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 3;
+}
+
+.monkey-chart-now {
+  stroke: var(--accent);
+  stroke-width: 1.25;
+  stroke-dasharray: 3 3;
+  opacity: 0.85;
+}
+
+.monkey-chart-label {
+  fill: var(--ink-soft);
+  font-size: 10px;
+}
+
+.monkey-chart-axis {
+  fill: var(--ink-soft);
+  font-size: 11px;
+}
+
+.monkey-chart-legend {
+  list-style: none;
+  margin: 0.65rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+.monkey-chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.monkey-chart-swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.monkey-chart-swatch-now {
+  background: transparent;
+  border: 1.5px dashed var(--accent);
+}

@@ -79,24 +79,35 @@ export const PREMISES = {
   >,
   /**
    * 表示G（周期内）の到達目安。
-   * 1周期: 平均約80G・ハード天井222（pt相当）
-   * 2周期以降: 平均約100G
+   * 1周期: 平均約80G・表示Gハード天井222（ユーザー想定）
+   * 2周期以降: 平均約100G（規定pt上限666/444はポイントでありG数ではない）
    */
   cycleAvgReachDisplay: { 1: 80, later: 100 } as const,
-  /** 周期ごとの表示Gハード上限（規定pt到達の上限に相当） */
-  cycleDisplayHardCap: { 1: 222, mid: 666, last: 444 } as const,
+  /** 1周期目のみ表示Gハード上限。後期の666/444はptなのでG換算には使わない */
+  cycleDisplayHardCapGames: { 1: 222 } as const,
+  /**
+   * 平均到達を超えたあとの「もうすぐ規定」目安G。
+   * 超過分を666pt天井の残りGと誤ると出玉率が極端に悪化するため。
+   */
+  cycleOverdueRemGames: 25,
   /**
    * 周期到達時のAT当選率。
    * ◎≈25% / ○≈3% / △≈1% / 「-」≈0% / 天井=100%
-   * 参考: トータル1周期≈40%・2周期以内≈64%はモード混合
    */
   cycleAtRate: {
     A: { 1: 0, 2: 0.25, 3: 0.01, 4: 0.03, 5: 0.25, 6: 1 },
     B: { 1: 0, 2: 0.25, 3: 1 },
     heaven: { 1: 1 },
   } as Record<Exclude<MonkeyMode, 'unknown'>, Record<number, number>>,
-  /** 表と周期モデルのブレンド（周期差を出玉率に反映） */
-  cycleCorrectionScale: 0.75,
+  /**
+   * 表と周期モデルのブレンド。
+   * 表が主軸（周期未考慮）。改善・悪化とも表から大きく乖離させない。
+   */
+  cycleCorrectionScale: 0.2,
+  /** 周期補正で表より平均Gを縮める下限（改善のキャップ） */
+  cycleImproveCap: 0.97,
+  /** 周期補正で表より平均Gを伸ばす上限（悪化のキャップ） */
+  cycleWorsenCap: 1.05,
 } as const
 
 export function medalsPerGame(): number {
@@ -129,10 +140,10 @@ export function winMedalsFromEv(row: EvRow): number {
   return (row.investYen + row.yen) / PREMISES.yenPerMedal
 }
 
-export function hardCapForCycle(cycle: number): number {
-  if (cycle <= 1) return PREMISES.cycleDisplayHardCap[1]
-  if (cycle >= 6) return PREMISES.cycleDisplayHardCap.last
-  return PREMISES.cycleDisplayHardCap.mid
+export function hardCapForCycle(cycle: number): number | null {
+  // 1周期目だけ表示Gハード。2周期以降の666/444は規定ptでありG数ではない
+  if (cycle <= 1) return PREMISES.cycleDisplayHardCapGames[1]
+  return null
 }
 
 export function avgReachForCycle(cycle: number): number {

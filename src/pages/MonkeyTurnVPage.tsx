@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import BackToHomeButton from '../components/BackToHomeButton'
 import ClosingCorrectionRows from '../components/ClosingCorrectionRows'
 import ClosingHoursField from '../components/ClosingHoursField'
+import MonkeyPayoutChart from '../components/MonkeyPayoutChart'
 import {
   applyClosingCorrection,
   DEFAULT_CLOSING_HOURS,
@@ -42,8 +43,8 @@ const MODE_OPTIONS: { id: MonkeyMode; label: string }[] = [
 ]
 
 export default function MonkeyTurnVPage() {
-  const [actualText, setActualText] = useState('307')
-  const [displayText, setDisplayText] = useState('0')
+  const [actualText, setActualText] = useState('102')
+  const [displayText, setDisplayText] = useState('70')
   const [cycleText, setCycleText] = useState('2')
   const [mode, setMode] = useState<MonkeyMode>('unknown')
   const [shortened, setShortened] = useState(false)
@@ -165,7 +166,7 @@ export default function MonkeyTurnVPage() {
           />
         </label>
         <p className="inline-note">
-          液晶の当該周期内G。1周期目はハード天井222（平均到達≈80G）。2〜5周期は上限666、6周期は444。
+          液晶の当該周期内G。1周期目はハード天井222G（平均≈80G）かつ表示G≥実G（下回る組合せは出玉率を出さない）。2周期以降は平均≈100G。
         </p>
 
         <label className="field">
@@ -222,6 +223,12 @@ export default function MonkeyTurnVPage() {
         </label>
 
         <ClosingHoursField value={closingHours} onChange={setClosingHours} />
+
+        {result.invalidCycle1Games && (
+          <p className="inline-note">
+            1周期目では表示Gが実Gを下回ることはないため、この組合せでは期待出玉率を表示しません（表示Gを実G以上にしてください）。
+          </p>
+        )}
 
         <section className="results" aria-label="計算結果">
           <div className="results-head results-head-kaba">
@@ -289,6 +296,15 @@ export default function MonkeyTurnVPage() {
             </span>
           </div>
         </section>
+
+        <h2 className="results-section-title">期待出玉率の推移</h2>
+        <MonkeyPayoutChart
+          actualGames={actualGames}
+          displayGames={displayGames}
+          cycle={cycle}
+          mode={mode}
+          shortened={shortened}
+        />
 
         <h2 className="results-section-title">
           参考・モードB／天国（閉店補正後）

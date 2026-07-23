@@ -23,6 +23,16 @@ export type MonkeyInput = {
   shortened: boolean
 }
 
+/** 1周期目は表示G ≥ 実G（同時進行のため表示が実を下回らない） */
+export function isValidMonkeyGames(
+  cycle: number,
+  actualGames: number,
+  displayGames: number,
+): boolean {
+  if (cycle !== 1) return true
+  return displayGames >= actualGames
+}
+
 export type MonkeyModeRow = {
   id: Exclude<MonkeyMode, 'unknown'>
   label: string
@@ -35,6 +45,8 @@ export type MonkeyModeRow = {
 
 export type MonkeyResult = {
   reachable: boolean
+  /** 1周期目で表示G < 実G のとき true（出玉率は出さない） */
+  invalidCycle1Games: boolean
   expectedPayoutRate: number | null
   expectedWinMedals: number | null
   tablePayoutRate: number | null
@@ -98,7 +110,8 @@ export function clampCycle(
 
 /**
  * 当該周期の表示G残り。
- * 平均到達を優先し、超過時のみハード上限（1周期目222等）まで。
+ * 平均到達Gを優先。1周期目のみハード222G。
+ * 2周期以降の規定pt上限（666等）はG数ではないので使わない。
  */
 export function remainingDisplayInCycle(
   cycle: number,
@@ -106,10 +119,14 @@ export function remainingDisplayInCycle(
 ): number {
   const d = Math.max(0, Math.floor(displayGames))
   const soft = avgReachForCycle(cycle)
-  const hard = hardCapForCycle(cycle)
   const remSoft = soft - d
   if (remSoft > 0) return remSoft
-  return Math.max(1, hard - d)
+
+  const hard = hardCapForCycle(cycle)
+  if (hard != null) return Math.max(1, hard - d)
+
+  // 平均超過＝規定が近い想定（長く見積もると表から大きく下振れする）
+  return PREMISES.cycleOverdueRemGames
 }
 
 function expectedGamesUntilOrCap(p: number, t: number): number {
@@ -227,7 +244,13 @@ function scenarioForMode(
     shortened,
   )
   const scale = PREMISES.cycleCorrectionScale
-  const avgGames = tableAvgGames + (modelGames - tableAvgGames) * scale
+  let avgGames = tableAvgGames + (modelGames - tableAvgGames) * scale
+  // 表が主軸。周期補正は±数％以内に抑える（2周期◎だけで101%に跳ねないように）
+  if (avgGames < tableAvgGames) {
+    avgGames = Math.max(avgGames, tableAvgGames * PREMISES.cycleImproveCap)
+  } else if (avgGames > tableAvgGames) {
+    avgGames = Math.min(avgGames, tableAvgGames * PREMISES.cycleWorsenCap)
+  }
   const avgInvestment = avgGames * mPerG
   const expectedPayoutRate =
     avgInvestment > 0 ? (winMedals / avgInvestment) * 100 : null
@@ -269,6 +292,43 @@ export function calculateMonkey(input: MonkeyInput): MonkeyResult {
   const remainingByG = Math.max(0, ceilingG - g)
   const remDisplay = remainingDisplayInCycle(cycle, display)
   const actualDone = g >= ceilingG
+  const invalidCycle1Games = !isValidMonkeyGames(cycle, g, display)
+
+  const emptyByMode: MonkeyModeRow[] = MODE_IDS.map((id) => ({
+    id,
+    label: MODE_LABEL[id],
+    expectedPayoutRate: null,
+    avgGames: null,
+    modelGamesToAt: null,
+    remainingInCycleDisplay: remDisplay,
+    maxCycle: Math.min(
+      PREMISES.modeMaxCycle[id],
+      shortened ? PREMISES.maxCycle.shortened : PREMISES.maxCycle.normal,
+    ),
+  }))
+
+  if (invalidCycle1Games) {
+    return {
+      reachable: false,
+      invalidCycle1Games: true,
+      expectedPayoutRate: null,
+      expectedWinMedals: winMedals,
+      tablePayoutRate: null,
+      cycleCorrectionPp: null,
+      avgGames: null,
+      avgInvestment: null,
+      tableYenEv: null,
+      tableInvestYen: null,
+      tableAvgGames: null,
+      modelGamesToAt: null,
+      remainingByG,
+      remainingInCycleDisplay: remDisplay,
+      effectiveMaxCycle: maxCycle,
+      ceilingG,
+      resolvedMode,
+      byMode: emptyByMode,
+    }
+  }
 
   const byMode = MODE_IDS.map((id) =>
     scenarioForMode(
@@ -289,6 +349,7 @@ export function calculateMonkey(input: MonkeyInput): MonkeyResult {
   if (actualDone || primary.expectedPayoutRate == null) {
     return {
       reachable: false,
+      invalidCycle1Games: false,
       expectedPayoutRate: null,
       expectedWinMedals: winMedals,
       tablePayoutRate,
@@ -315,6 +376,7 @@ export function calculateMonkey(input: MonkeyInput): MonkeyResult {
 
   return {
     reachable: true,
+    invalidCycle1Games: false,
     expectedPayoutRate: primary.expectedPayoutRate,
     expectedWinMedals: winMedals,
     tablePayoutRate,
@@ -353,7 +415,7 @@ export function buildMonkeyPremises(input: MonkeyInput): Premise[] {
       label: '出玉率の主軸',
       value: 'web情報表＋周期・表示G補正（通常A既定）',
       basis:
-        '表は周期未考慮。モード不明は通常A。B・天国は下部参考。補正は75%反映',
+        '表は周期未考慮。モード不明は通常A。B・天国は下部参考。周期補正は表の±数％に抑制',
     },
     {
       label: '初当たり（AT）期待獲得出玉（分子）',
@@ -382,7 +444,7 @@ export function buildMonkeyPremises(input: MonkeyInput): Premise[] {
       label: '当該周期の表示G残り',
       value: `約${rem.toFixed(0)}G`,
       basis:
-        '1周期目は平均80G・ハード222。超過時はハードまで。以降平均100G（上限666/444）',
+        '1周期目は平均80G・ハード222G。2周期以降は平均100G（666/444は規定ptでG数ではない）。平均超過時はもうすぐ規定とみなす',
       derived: true,
     },
     {
