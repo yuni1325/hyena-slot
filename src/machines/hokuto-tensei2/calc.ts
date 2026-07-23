@@ -159,7 +159,7 @@ export function buildPremises(
     {
       label: '状況',
       value: PHASE_LABELS[phase],
-      basis: '振り分けテーブルが状況で異なる（なな徹・一撃公開）',
+      basis: '振り分けテーブルが状況で異なる（web情報・一撃公開）',
     },
     {
       label: 'シャッター判別',
@@ -196,7 +196,7 @@ export function buildPremises(
       label: '規定あべし振り分け',
       value: `${PHASE_LABELS[phase]}・設定1のゾーン別選択率（公開値）`,
       basis:
-        'なな徹 / 一撃の％を使用。ゾーン代表あべしは区間中央（人生期待値論ノート逆算に整合）',
+        'web情報 / 一撃の％を使用。ゾーン代表あべしは区間中央（人生期待値論ノート逆算に整合）',
     },
   ]
 
@@ -204,13 +204,13 @@ export function buildPremises(
     premises.push({
       label: 'モード滞在率',
       value: stayText,
-      basis: `なな徹「状況別のモード振り分け」設定1（${PHASE_LABELS[phase]}）。モード不問行は未当選で生存するモードの滞在率で残りあべしを加重平均`,
+      basis: `web情報「状況別のモード振り分け」設定1（${PHASE_LABELS[phase]}）。モード不問行は未当選で生存するモードの滞在率で残りあべしを加重平均`,
     })
   } else {
     premises.push({
       label: '混合に使うモード滞在率',
       value: stayText,
-      basis: `なな徹公開のモード移行率。${SHUTTER_CAP}超ゾーンは除外して再正規化`,
+      basis: `web情報公開のモード移行率。${SHUTTER_CAP}超ゾーンは除外して再正規化`,
     })
   }
 

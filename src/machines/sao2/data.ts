@@ -1,7 +1,6 @@
 /**
  * スロット ソードアート・オンラインⅡ（SAO2）— 設定1・ハイエナ用定数
- * 出典:
- * - https://nana-press.com/kaiseki/machine/1158/37243/ （AT間天井期待値・暫定）
+ * 出典: web情報（AT間天井・暫定）／一撃／DMM
  * - https://1geki.jp/slot/l_sao2/
  * - https://p-town.dmm.com/machines/5025
  *
@@ -16,7 +15,7 @@ export type EvRow = {
   reachRate: number
 }
 
-/** なな徹・AT間天井（等価・設定1・暫定・CZ天井未考慮） */
+/** web情報・AT間天井（等価・設定1・暫定・CZ天井未考慮） */
 export const EV_AT: EvRow[] = [
   { games: 0, yen: -1329, investYen: 12459, reachRate: 5.25 },
   { games: 50, yen: -1239, investYen: 12368, reachRate: 5.93 },
@@ -68,7 +67,7 @@ export const CZ_MODE_IDS: CzModeId[] = ['A', 'B', 'C', 'D', 'heaven']
 export const PREMISES = {
   atCeilingG: 1200,
   czActualCeiling: { normal: 499, shortened: 256 },
-  /** CZ成功→AT 期待度（なな徹・スコードロン約55%） */
+  /** CZ成功→AT 期待度（web情報・スコードロン約55%） */
   czSuccessRate: 0.55,
   tableWinMedals: (EV_AT[0].investYen + EV_AT[0].yen) / 20,
   atHitDenom: 386.2,

@@ -208,12 +208,12 @@ export function buildSao2Premises(input: Sao2Input): Premise[] {
       label: '出玉率の主軸',
       value: 'AT間表とCZ経由近似の高い方',
       basis:
-        'AT間＝なな徹暫定表。CZ＝平均1/238.4（レア役・バレット・ゾーン込み）と天井の競合＋成功率55%',
+        'AT間＝web情報暫定表。CZ＝平均1/238.4（レア役・バレット・ゾーン込み）と天井の競合＋成功率55%',
     },
     {
       label: '初当たり（AT）期待獲得出玉',
       value: `約${PREMISES.tableWinMedals.toFixed(1)}枚`,
-      basis: 'なな徹AT間表の invest+期待値から逆算。CZ当選は初当たりに含めない',
+      basis: 'web情報AT間表の invest+期待値から逆算。CZ当選は初当たりに含めない',
     },
     {
       label: 'AT間天井',
@@ -239,7 +239,7 @@ export function buildSao2Premises(input: Sao2Input): Premise[] {
     {
       label: 'ヤメ時（表の条件）',
       value: 'AT終了後即ヤメ',
-      basis: 'なな徹シミュ。表はCZ天井・モード未考慮',
+      basis: 'web情報シミュ。表はCZ天井・モード未考慮',
     },
     {
       label: '通常時消費',
@@ -247,8 +247,8 @@ export function buildSao2Premises(input: Sao2Input): Premise[] {
       basis: `50 ÷ ${PREMISES.baseGamesPer50}`,
     },
     {
-      label: 'なな徹',
-      value: 'https://nana-press.com/kaiseki/machine/1158/37243/',
+      label: '出典',
+      value: 'web情報の天井期待値表',
       basis: 'AT間期待値は暫定。CZ経路は自前近似',
       derived: true,
     },

@@ -202,7 +202,7 @@ export default function Otome5Page() {
             <span>{formatNum(result.expectedWinMedals, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表ベース</span>
+            <span className="mode">web情報表ベース</span>
             <span>{formatRate(result.tablePayoutRate)}</span>
           </div>
           <div className="result-row result-row-kaba">
@@ -218,7 +218,7 @@ export default function Otome5Page() {
             <span>{formatNum(result.avgInvestment, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・平均G</span>
+            <span className="mode">web情報表・平均G</span>
             <span>{formatNum(result.tableAvgGames, 1)}G</span>
           </div>
           <div className="result-row result-row-kaba">
@@ -234,11 +234,11 @@ export default function Otome5Page() {
             <span>{formatNum(result.remainingInCycleDisplay, 0)}G</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・等価期待値</span>
+            <span className="mode">web情報表・等価期待値</span>
             <span>{formatYen(result.tableYenEv)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・平均投資</span>
+            <span className="mode">web情報表・平均投資</span>
             <span>
               {result.tableInvestYen == null
                 ? '—'
@@ -298,7 +298,7 @@ export default function Otome5Page() {
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・AT終了即ヤメ／出玉率＝なな徹表＋周期補正→閉店補正（暫定表）
+            設定1固定・AT終了即ヤメ／出玉率＝web情報表＋周期補正→閉店補正（暫定表）
           </p>
           <ul>
             {premises.map((p) => (
@@ -313,7 +313,7 @@ export default function Otome5Page() {
             ))}
           </ul>
           <p className="footnote">
-            1周期目の主表示・テーブル別は引き戻し確定（最大200G）。モード別一覧は各モード仮定の内訳。なな徹期待値は暫定版。
+            1周期目の主表示・テーブル別は引き戻し確定（最大200G）。モード別一覧は各モード仮定の内訳。web情報期待値は暫定版。
           </p>
         </section>
         <BackToHomeButton footer />

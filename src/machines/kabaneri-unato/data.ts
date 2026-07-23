@@ -1,11 +1,9 @@
 /**
  * スマスロ 甲鉄城のカバネリ 海門決戦 — 設定1・天井ハイエナ用定数
- * 出典:
- * - https://nana-press.com/kaiseki/machine/1097/35403/ （天井期待値）
- * - https://nana-press.com/kaiseki/machine/1097/35411/ （周期）
+ * 出典: web情報（天井・周期）／flick7（ST平均・参考）
  * - https://flick7.net/slot/kabaneri_unato__c.php （ST平均獲得・参考）
  *
- * 出玉率の主軸はなな徹表。周期・CZは補正として加味する。
+ * 出玉率の主軸はweb情報表。周期・CZは補正として加味する。
  * 初当りボーナス（周期・CZ成功とも）は概ね BIG:REG = 1:1
  *   BIG＝エピソード → ST濃厚
  *   REG＝駿城 → ST期待度約20%、失敗時は周期/G数引き継ぎ
@@ -22,7 +20,7 @@ export type EvRow = {
   reachRate: number
 }
 
-/** なな徹・ゲーム数天井期待値（周期数は考慮しないと明記） */
+/** web情報・ゲーム数天井期待値（周期数は考慮しないと明記） */
 export const EV_NORMAL: EvRow[] = [
   { games: 0, yen: -1564, investYen: 13629, reachRate: 12.76 },
   { games: 50, yen: -1347, investYen: 13412, reachRate: 14.15 },
@@ -63,7 +61,7 @@ export const EV_SHORTENED: EvRow[] = [
 
 export const PREMISES = {
   /**
-   * 出玉率の分子（なな徹表準拠）。
+   * 出玉率の分子（web情報表準拠）。
    * 表は「AT獲得枚数は常に一定」→ invest+yen から逆算すると約603.25枚で固定。
    */
   tableWinMedals: (EV_NORMAL[0].investYen + EV_NORMAL[0].yen) / 20,
@@ -72,7 +70,7 @@ export const PREMISES = {
   stHitDenom: 422.5,
   firstHitDenom: 254.2,
   payoutRate: 97.5,
-  /** なな徹シミュは31.0、実戦系は31.4 */
+  /** web情報シミュは31.0、実戦系は31.4 */
   baseGamesPer50: 31.0,
   yenPerMedal: 20,
   /** ST純増目安（枚/G）・閉店時の所要G概算用 */
@@ -81,7 +79,7 @@ export const PREMISES = {
   maxCycle: { normal: 6, shortened: 4 },
   /** 1・2周期の規定G天井（表示G） */
   cycleGCeiling: { 1: 150, 2: 300 } as Record<number, number>,
-  /** なな徹：1周期平均約100G、2周期平均約250Gで到達 */
+  /** web情報：1周期平均約100G、2周期平均約250Gで到達 */
   cycleAvgReachG: { 1: 100, 2: 250 } as Record<number, number>,
   /**
    * 周期到達時ボーナス当選率（設定1）
@@ -100,7 +98,7 @@ export const PREMISES = {
   /** 直前での減衰下限（1.0=減衰なし、0.45=強い抑制） */
   nearCycleCeilingDampMin: 0.45,
   /**
-   * 周期モデルとなな徹表の平均G差のうち、補正に載せる割合。
+   * 周期モデルとweb情報表の平均G差のうち、補正に載せる割合。
    * 1.0=周期フル反映、0=表のみ。上振れ抑制のため半分程度。
    */
   cycleCorrectionScale: 0.5,
@@ -167,7 +165,7 @@ export function interpolateEv(rows: EvRow[], games: number): EvRow {
   return last
 }
 
-/** なな徹表1行から獲得枚数（常に約603） */
+/** web情報表1行から獲得枚数（常に約603） */
 export function winMedalsFromEv(row: EvRow): number {
   return (row.investYen + row.yen) / PREMISES.yenPerMedal
 }

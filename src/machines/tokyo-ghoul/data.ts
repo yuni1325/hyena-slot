@@ -1,8 +1,6 @@
 /**
  * L 東京喰種 — 設定1・ハイエナ用定数
- * 出典:
- * - https://nana-press.com/kaiseki/machine/889/27250/ （天井期待値）
- * - https://nana-press.com/kaiseki/machine/889/27251/ （狙い目）
+ * 出典: web情報（天井・狙い目）／一撃／DMM
  * - https://1geki.jp/slot/l_tokyoghoul/
  * - https://p-town.dmm.com/machines/4742
  *
@@ -41,7 +39,7 @@ export const CZ_CEILING_LABEL: Record<CzCeilingKind, string> = {
   reset200: '設定変更・朝一（200G+α）',
 }
 
-/** なな徹・AT間天井期待値（実G・設定1） */
+/** web情報・AT間天井期待値（実G・設定1） */
 export const EV_AT: EvRow[] = [
   { games: 0, yen: -815, investYen: 12723, reachRate: 5.65 },
   { games: 50, yen: -718, investYen: 12626, reachRate: 6.36 },
@@ -69,7 +67,7 @@ export const EV_AT: EvRow[] = [
   { games: 1150, yen: 10386, investYen: 1522, reachRate: 88.71 },
 ]
 
-/** なな徹・CZ間天井通常（表示G・最大600・モード未考慮） */
+/** web情報・CZ間天井通常（表示G・最大600・モード未考慮） */
 export const EV_CZ_NORMAL: EvRow[] = [
   { games: 0, yen: -1018, investYen: 8471, reachRate: 13.96 },
   { games: 50, yen: -773, investYen: 8226, reachRate: 16.45 },
@@ -85,7 +83,7 @@ export const EV_CZ_NORMAL: EvRow[] = [
   { games: 550, yen: 5963, investYen: 1490, reachRate: 84.87 },
 ]
 
-/** なな徹・CZ間天井 設定変更（朝一200G） */
+/** web情報・CZ間天井 設定変更（朝一200G） */
 export const EV_CZ_RESET: EvRow[] = [
   { games: 0, yen: 257, investYen: 4738, reachRate: 51.87 },
   { games: 20, yen: 603, investYen: 4392, reachRate: 55.39 },

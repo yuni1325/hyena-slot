@@ -1,12 +1,10 @@
 /**
  * スマスロモンキーターンⅤ — 設定1・天井ハイエナ用定数
- * 出典:
- * - https://nana-press.com/kaiseki/machine/644/18016/ （天井期待値）
- * - https://nana-press.com/kaiseki/machine/644/23068/ （狙い目・周期）
+ * 出典: web情報（天井・狙い目）／一撃／DMM
  * - https://1geki.jp/slot/l_monkeyturn5/
  * - https://p-town.dmm.com/machines/4450
  *
- * 出玉率の主軸はなな徹ゲーム数天井期待値表（周期・モード未考慮）。
+ * 出玉率の主軸はweb情報ゲーム数天井期待値表（周期・モード未考慮）。
  * 周期・モードは補正として加味する。
  */
 
@@ -19,7 +17,7 @@ export type EvRow = {
 
 export type MonkeyMode = 'A' | 'B' | 'heaven' | 'unknown'
 
-/** なな徹・通常条件（ST後想定・周期未考慮） */
+/** web情報・通常条件（ST後想定・周期未考慮） */
 export const EV_NORMAL: EvRow[] = [
   { games: 0, yen: -600, investYen: 9370, reachRate: 8.72 },
   { games: 50, yen: -453, investYen: 9223, reachRate: 10.16 },
@@ -39,7 +37,7 @@ export const EV_NORMAL: EvRow[] = [
   { games: 750, yen: 7319, investYen: 1451, reachRate: 85.86 },
 ]
 
-/** なな徹・天井短縮時（設定変更・青島VS波多野敗北後） */
+/** web情報・天井短縮時（設定変更・青島VS波多野敗北後） */
 export const EV_SHORTENED: EvRow[] = [
   { games: 0, yen: 740, investYen: 8030, reachRate: 21.78 },
   { games: 50, yen: 1108, investYen: 7662, reachRate: 25.36 },
@@ -54,7 +52,7 @@ export const EV_SHORTENED: EvRow[] = [
 ]
 
 export const PREMISES = {
-  /** なな徹表から逆算した一定獲得（invest+yen） */
+  /** web情報表から逆算した一定獲得（invest+yen） */
   tableWinMedals: (EV_NORMAL[0].investYen + EV_NORMAL[0].yen) / 20,
   atHitDenom: 299.8,
   payoutRate: 97.75,
@@ -68,7 +66,7 @@ export const PREMISES = {
     Exclude<MonkeyMode, 'unknown'>,
     number
   >,
-  /** 1周期平均約80G、2周期以降平均約100G（なな徹・1激） */
+  /** 1周期平均約80G、2周期以降平均約100G（web情報・1激） */
   cycleAvgGames: { 1: 80, later: 100 } as const,
   /**
    * 周期到達時のAT当選率（ユーザー指定）。

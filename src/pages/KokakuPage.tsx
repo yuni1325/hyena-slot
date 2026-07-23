@@ -14,13 +14,18 @@ import {
   formatYen,
   rateTone,
 } from '../lib/format'
-import { buildSao2Premises, calculateSao2 } from '../machines/sao2/calc'
 import {
-  CZ_MODE_IDS,
-  CZ_MODE_LABEL,
+  buildKokakuPremises,
+  calculateKokaku,
+} from '../machines/kokaku/calc'
+import {
   PREMISES,
-  type CzModeId,
-} from '../machines/sao2/data'
+  SITUATION_LABEL,
+  ZEN_MODE_IDS_NORMAL,
+  ZEN_MODE_LABEL,
+  type Situation,
+  type ZenModeId,
+} from '../machines/kokaku/data'
 
 function parseIntSafe(text: string, fallback = 0): number {
   const n = Number(text)
@@ -28,33 +33,25 @@ function parseIntSafe(text: string, fallback = 0): number {
   return Math.floor(n)
 }
 
-export default function Sao2Page() {
+export default function KokakuPage() {
   const [atText, setAtText] = useState('0')
-  const [czText, setCzText] = useState('0')
   const [displayText, setDisplayText] = useState('0')
-  const [czMode, setCzMode] = useState<CzModeId>('A')
-  const [czShortened, setCzShortened] = useState(false)
+  const [situation, setSituation] = useState<Situation>('normal')
+  const [zenMode, setZenMode] = useState<ZenModeId>('A')
   const [closingHours, setClosingHours] = useState<ClosingHours>(
     DEFAULT_CLOSING_HOURS,
   )
 
   const atGames = useMemo(() => parseIntSafe(atText), [atText])
-  const czGames = useMemo(() => parseIntSafe(czText), [czText])
   const displayGames = useMemo(() => parseIntSafe(displayText), [displayText])
 
   const input = useMemo(
-    () => ({
-      atGames,
-      czGames,
-      displayGames,
-      czMode,
-      czShortened,
-    }),
-    [atGames, czGames, displayGames, czMode, czShortened],
+    () => ({ atGames, displayGames, situation, zenMode }),
+    [atGames, displayGames, situation, zenMode],
   )
 
-  const result = useMemo(() => calculateSao2(input), [input])
-  const premises = useMemo(() => buildSao2Premises(input), [input])
+  const result = useMemo(() => calculateKokaku(input), [input])
+  const premises = useMemo(() => buildKokakuPremises(input), [input])
 
   const closing = useMemo(
     () =>
@@ -85,10 +82,12 @@ export default function Sao2Page() {
 
   const primaryLabel =
     result.primaryPath === 'at'
-      ? 'AT間（実G）が有利'
+      ? 'AT間が有利'
       : result.primaryPath === 'cz'
-        ? 'CZ経由（実G/表示G）が有利'
+        ? 'CZ経由（表示G）が有利'
         : '—'
+
+  const modeSelectDisabled = situation !== 'normal'
 
   return (
     <div className="app">
@@ -100,83 +99,78 @@ export default function Sao2Page() {
             HYENA SLOT
           </Link>
         </p>
-        <h1 className="machine-name">スロット ソードアート・オンラインⅡ</h1>
+        <h1 className="machine-name">スマスロ 攻殻機動隊</h1>
         <p className="tagline">
-          AT間実GとCZ間（実G・表示G・モード）から期待値を確認
+          AT間G・表示G・殲滅モード・状況から期待値を確認
         </p>
       </header>
 
       <main className="panel">
         <label className="field">
-          <span>実G数（AT間）</span>
+          <span>現在のG数（AT間）</span>
           <input
             type="number"
             inputMode="numeric"
             min={0}
-            max={1300}
+            max={1100}
             value={atText}
             onChange={(e) => setAtText(e.target.value)}
             onBlur={() => setAtText(String(atGames))}
           />
         </label>
-        <p className="inline-note">AT間天井1200G+α。web情報表の打ち出しG。</p>
+        <p className="inline-note">
+          データカウンター想定。通常999G／リセット699GでAT。
+        </p>
 
         <label className="field">
-          <span>実G数（CZ間）</span>
+          <span>表示G数（CZ間・液晶左下）</span>
           <input
             type="number"
             inputMode="numeric"
             min={0}
             max={600}
-            value={czText}
-            onChange={(e) => setCzText(e.target.value)}
-            onBlur={() => setCzText(String(czGames))}
-          />
-        </label>
-        <p className="inline-note">
-          CZ間の実ゲーム数。通常499G+α／短縮256G+αでCZ。
-        </p>
-
-        <label className="field">
-          <span>表示G数（液晶）</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={0}
-            max={900}
             value={displayText}
             onChange={(e) => setDisplayText(e.target.value)}
             onBlur={() => setDisplayText(String(displayGames))}
           />
         </label>
         <p className="inline-note">
-          液晶の加算G。モード別天井（A/B800・C650・D350・天国100）。
+          殲滅モード別のCZ天井まで。到達で殲滅ZONE→CZ。
         </p>
 
         <label className="field">
-          <span>内部モード（液晶CZ天井）</span>
+          <span>状況</span>
           <select
-            value={czMode}
-            onChange={(e) => setCzMode(e.target.value as CzModeId)}
+            value={situation}
+            onChange={(e) => setSituation(e.target.value as Situation)}
           >
-            {CZ_MODE_IDS.map((id) => (
+            {(Object.keys(SITUATION_LABEL) as Situation[]).map((id) => (
               <option key={id} value={id}>
-                {CZ_MODE_LABEL[id]}
+                {SITUATION_LABEL[id]}
               </option>
             ))}
           </select>
         </label>
 
         <label className="field">
-          <span>CZ間実G短縮</span>
+          <span>殲滅モード</span>
           <select
-            value={czShortened ? 'on' : 'off'}
-            onChange={(e) => setCzShortened(e.target.value === 'on')}
+            value={zenMode}
+            disabled={modeSelectDisabled}
+            onChange={(e) => setZenMode(e.target.value as ZenModeId)}
           >
-            <option value="off">なし（499G+α）</option>
-            <option value="on">あり（256G+α・設定変更／初回上位CZ失敗後など）</option>
+            {ZEN_MODE_IDS_NORMAL.map((id) => (
+              <option key={id} value={id}>
+                {ZEN_MODE_LABEL[id]}
+              </option>
+            ))}
           </select>
         </label>
+        <p className="inline-note">
+          {modeSelectDisabled
+            ? 'リセット／白の境界失敗時はCZ天井が状況側で固定されます。モード不明時は通常A想定＋下のモード別一覧。'
+            : '不明時は通常A想定。下にモード別一覧あり。'}
+        </p>
 
         <ClosingHoursField value={closingHours} onChange={setClosingHours} />
 
@@ -188,7 +182,7 @@ export default function Sao2Page() {
           <ClosingCorrectionRows
             closing={closing}
             bonusLabel="AT"
-            machineId="sao2"
+            machineId="kokaku"
             pureIncPerGame={PREMISES.pureInc}
           />
           <div className="result-row result-row-kaba">
@@ -208,34 +202,6 @@ export default function Sao2Page() {
             <span>{formatRate(result.czPayoutRate)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">AT天井まで</span>
-            <span>
-              {formatNum(result.atRemaining, 0)}G / {result.atCeilingG}G
-            </span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">CZ実G天井まで</span>
-            <span>
-              {formatNum(result.czActualRemaining, 0)}G /{' '}
-              {result.czActualCeilingG}G
-            </span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">CZ液晶天井まで</span>
-            <span>
-              {formatNum(result.czDisplayRemaining, 0)}G /{' '}
-              {result.czDisplayCeilingG}G
-            </span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">CZまで（近い方）</span>
-            <span>{formatNum(result.czEffectiveRemaining, 0)}G</span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">平均G（採用経路）</span>
-            <span>{formatNum(result.avgGames, 1)}G</span>
-          </div>
-          <div className="result-row result-row-kaba">
             <span className="mode">AT間・等価期待値</span>
             <span>{formatYen(result.atYenEv)}</span>
           </div>
@@ -247,36 +213,62 @@ export default function Sao2Page() {
                 : `${Math.round(result.atInvestYen).toLocaleString('ja-JP')}円`}
             </span>
           </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">AT間・天井到達率</span>
+            <span>{formatRate(result.atReachRate)}</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">AT天井まで</span>
+            <span>
+              {formatNum(result.atRemaining, 0)}G / {result.atCeilingG}G
+            </span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">CZ天井まで</span>
+            <span>
+              {formatNum(result.czRemaining, 0)}G / {result.czCeilingG}G
+            </span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">平均G（採用経路）</span>
+            <span>{formatNum(result.avgGames, 1)}G</span>
+          </div>
         </section>
 
-        <h2 className="results-section-title">モード別・CZ経由（閉店補正後）</h2>
-        <p className="inline-note">
-          液晶天井だけ変えた内訳。平均CZ1/238.4と天井の競合＋成功率55%。失敗後はフル天井リセット。
-        </p>
-        <section className="results" aria-label="モード別">
-          <div className="results-head results-head-scenario">
-            <span>モード</span>
-            <span>出玉率</span>
-            <span>平均G</span>
-            <span>液晶残り</span>
-          </div>
-          {modeRows.map((r) => (
-            <div
-              key={r.id}
-              className={`result-row result-row-scenario tone-${rateTone(r.closedRate)}`}
-            >
-              <span className="mode">{r.label}</span>
-              <span className="rate">{formatRate(r.closedRate)}</span>
-              <span>{formatNum(r.avgGamesToAtViaCz, 1)}G</span>
-              <span>{formatNum(r.displayRemaining, 0)}G</span>
-            </div>
-          ))}
-        </section>
+        {situation === 'normal' && (
+          <>
+            <h2 className="results-section-title">
+              モード別・CZ経由（閉店補正後）
+            </h2>
+            <p className="inline-note">
+              表示G固定で殲滅モードだけ変えた内訳。CZ平均1/238＋S.A.M.成功率52.6%。
+            </p>
+            <section className="results" aria-label="モード別">
+              <div className="results-head results-head-scenario">
+                <span>モード</span>
+                <span>出玉率</span>
+                <span>平均G</span>
+                <span>CZ残り</span>
+              </div>
+              {modeRows.map((r) => (
+                <div
+                  key={r.id}
+                  className={`result-row result-row-scenario tone-${rateTone(r.closedRate)}`}
+                >
+                  <span className="mode">{r.label}</span>
+                  <span className="rate">{formatRate(r.closedRate)}</span>
+                  <span>{formatNum(r.avgGamesToAtViaCz, 1)}G</span>
+                  <span>{formatNum(r.displayRemaining, 0)}G</span>
+                </div>
+              ))}
+            </section>
+          </>
+        )}
 
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・AT終了即ヤメ／AT間表とCZ近似の高い方→閉店補正
+            設定1固定・AT表とCZ近似の高い方→閉店補正。殲滅ポイントは未入力。
           </p>
           <ul>
             {premises.map((p) => (
@@ -291,7 +283,7 @@ export default function Sao2Page() {
             ))}
           </ul>
           <p className="footnote">
-            web情報AT間表はCZ天井・モード未考慮の暫定版。CZ経路は公表CZ確率で途中当選を平均化し、シューティングチャージやバレット個数は個別には見ていない。天国まで転落なし。
+            狙い目目安（web情報・等価）: 通常450G〜／リセット150G〜。AT後は通常D約50%。
           </p>
         </section>
         <BackToHomeButton footer />

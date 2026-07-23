@@ -162,7 +162,7 @@ export default function KabaneriUnatoPage() {
             <span>{formatNum(result.expectedWinMedals, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表ベース</span>
+            <span className="mode">web情報表ベース</span>
             <span>{formatRate(result.tablePayoutRate)}</span>
           </div>
           <div className="result-row result-row-kaba">
@@ -178,7 +178,7 @@ export default function KabaneriUnatoPage() {
             <span>{formatNum(result.avgInvestment, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・平均G</span>
+            <span className="mode">web情報表・平均G</span>
             <span>{formatNum(result.tableAvgGames, 1)}G</span>
           </div>
           <div className="result-row result-row-kaba">
@@ -199,11 +199,11 @@ export default function KabaneriUnatoPage() {
             </div>
           )}
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・等価期待値</span>
+            <span className="mode">web情報表・等価期待値</span>
             <span>{formatYen(result.tableYenEv)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・平均投資</span>
+            <span className="mode">web情報表・平均投資</span>
             <span>
               {result.tableInvestYen == null
                 ? '—'
@@ -215,7 +215,7 @@ export default function KabaneriUnatoPage() {
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・ST終了でヤメ／出玉率＝なな徹表＋周期補正→閉店補正
+            設定1固定・ST終了でヤメ／出玉率＝web情報表＋周期補正→閉店補正
           </p>
           <ul>
             {premises.map((p) => (
@@ -230,7 +230,7 @@ export default function KabaneriUnatoPage() {
             ))}
           </ul>
           <p className="footnote">
-            期待出玉率＝なな徹表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の約603枚。周期モデル差は50%だけ反映。規定G直前の周期当選は減衰。BIG:REG=1:1（REGはST約20%）。天井到達時のみエピソード＝ST確定。表示Gは150/300で周期下限を強制（低Gの高周期はポイント先行として許可）。
+            期待出玉率＝web情報表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の約603枚。周期モデル差は50%だけ反映。規定G直前の周期当選は減衰。BIG:REG=1:1（REGはST約20%）。天井到達時のみエピソード＝ST確定。表示Gは150/300で周期下限を強制（低Gの高周期はポイント先行として許可）。
           </p>
         </section>
         <BackToHomeButton footer />

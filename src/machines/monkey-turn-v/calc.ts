@@ -86,7 +86,7 @@ function expectedGamesUntilOrCap(p: number, t: number): number {
 
 /**
  * モード既知時の周期経路ST(=AT)期待G。
- * 超抜CZ等はなな徹表側に織込み想定のため、ここでは周期のみ。
+ * 超抜CZ等はweb情報表側に織込み想定のため、ここでは周期のみ。
  */
 export function expectedGamesToAtModel(
   cycle: number,
@@ -247,13 +247,13 @@ export function buildMonkeyPremises(input: MonkeyInput): Premise[] {
   return [
     {
       label: '出玉率の主軸',
-      value: 'なな徹ゲーム数天井期待値表',
+      value: 'web情報ゲーム数天井期待値表',
       basis:
         '周期・モード未考慮。モード判明時のみ周期補正を50%反映。モード不明時は表のみ',
     },
     {
       label: '初当たり（AT）期待獲得出玉（分子）',
-      value: `${PREMISES.tableWinMedals.toFixed(2)}枚（なな徹表・一定）`,
+      value: `${PREMISES.tableWinMedals.toFixed(2)}枚（web情報表・一定）`,
       basis: '表の invest+期待値 から逆算。算出条件はAT終了後即ヤメ・各状態平均純増固定',
     },
     {
@@ -277,23 +277,23 @@ export function buildMonkeyPremises(input: MonkeyInput): Premise[] {
     {
       label: '周期長さの近似',
       value: '1周期平均80G / 以降平均100G',
-      basis: 'なな徹・1激。規定ptはゾロ目（1周期≤222pt）',
+      basis: 'web情報・1激。規定ptはゾロ目（1周期≤222pt）',
       derived: true,
     },
     {
       label: '周期AT率',
       value: '◎≈25% / ○≈3% / △≈1% / 「-」≈0% / 天井=100%',
-      basis: 'ユーザー指定。なな徹の◎○△表に対応',
+      basis: 'ユーザー指定。web情報の◎○△表に対応',
       derived: true,
     },
     {
       label: '通常時消費',
       value: `約${mPerG.toFixed(3)}枚/G`,
-      basis: `50 ÷ ${PREMISES.baseGamesPer50}（なな徹シミュ条件）`,
+      basis: `50 ÷ ${PREMISES.baseGamesPer50}（web情報シミュ条件）`,
     },
     {
-      label: 'なな徹期待値表',
-      value: 'https://nana-press.com/kaiseki/machine/644/18016/',
+      label: '出典',
+      value: 'web情報の天井期待値表',
       basis: '等価・平均投資。周期数は考慮しない',
     },
     {

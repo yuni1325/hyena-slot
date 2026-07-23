@@ -51,11 +51,11 @@ export function clampCycleToDisplay(
 
 export type KabaneriResult = {
   reachable: boolean
-  /** 主表示：なな徹表 + 周期補正（抑制済み） */
+  /** 主表示：web情報表 + 周期補正（抑制済み） */
   expectedPayoutRate: number | null
   /** 初当たり1回あたりの期待獲得出玉（ST・枚。CZではない） */
   expectedWinMedals: number | null
-  /** なな徹表のみの出玉率 */
+  /** web情報表のみの出玉率 */
   tablePayoutRate: number | null
   /** 周期補正（pt）＝ expected − table */
   cycleCorrectionPp: number | null
@@ -130,7 +130,7 @@ function expectedGamesUntilOrCap(p: number, t: number): number {
 }
 
 /**
- * 周期+CZモデル単体の、ST到達までの期待G（なな徹表補正の材料）。
+ * 周期+CZモデル単体の、ST到達までの期待G（web情報表補正の材料）。
  */
 export function expectedGamesToStModel(
   cycle: number,
@@ -247,13 +247,13 @@ export function calculateKabaneri(input: KabaneriInput): KabaneriResult {
   const remainingByG = ceilingG - g
   const modelGames = expectedGamesToStModel(cycle, g, shortened)
 
-  // ① 主軸＝なな徹表、③ 周期差はスケールして半分だけ載せる
+  // ① 主軸＝web情報表、③ 周期差はスケールして半分だけ載せる
   const scale = PREMISES.cycleCorrectionScale
   const avgGames =
     tableAvgGames + (modelGames - tableAvgGames) * scale
   const avgInvestment = avgGames * mPerG
 
-  // ② 分子はなな徹表の一定獲得（≈603枚）
+  // ② 分子はweb情報表の一定獲得（≈603枚）
   const expectedPayoutRate =
     avgInvestment > 0 ? (winMedals / avgInvestment) * 100 : null
   const cycleCorrectionPp =
@@ -295,13 +295,13 @@ export function buildKabaneriPremises(input: KabaneriInput): Premise[] {
   return [
     {
       label: '出玉率の主軸',
-      value: 'なな徹ゲーム数天井期待値表',
+      value: 'web情報ゲーム数天井期待値表',
       basis:
         '周期未考慮の表をベースにし、周期条件は補正として加味（補正スケール50%）',
     },
     {
       label: '初当たり（ST）期待獲得出玉（分子）',
-      value: `${PREMISES.tableWinMedals.toFixed(2)}枚（なな徹表・一定）`,
+      value: `${PREMISES.tableWinMedals.toFixed(2)}枚（web情報表・一定）`,
       basis: `表の invest+期待値 から逆算。実践ST平均 ${PREMISES.practiceWinMedals}枚（flick7）は参考のみ。CZは初当たりに含めない`,
     },
     {
@@ -315,7 +315,7 @@ export function buildKabaneriPremises(input: KabaneriInput): Premise[] {
         ? `短縮 ${ceilingG}G / ${maxCycle}周期`
         : `通常 ${ceilingG}G / ${maxCycle}周期`,
       basis:
-        'なな徹「天井の期待値や恩恵」。短縮＝設定変更後・ST駆け抜け後・景之ST後。天井到達時のみエピソード（ST）確定',
+        'web情報「天井の期待値や恩恵」。短縮＝設定変更後・ST駆け抜け後・景之ST後。天井到達時のみエピソード（ST）確定',
     },
     {
       label: '1・2周期の規定G',
@@ -332,7 +332,7 @@ export function buildKabaneriPremises(input: KabaneriInput): Premise[] {
     {
       label: 'ヤメ時',
       value: 'ST終了後即ヤメ',
-      basis: 'なな徹シミュ条件に合わせる。REG（駿城失敗）は打ち継ぎ',
+      basis: 'web情報シミュ条件に合わせる。REG（駿城失敗）は打ち継ぎ',
     },
     {
       label: 'ボーナス振り分け',
@@ -365,11 +365,11 @@ export function buildKabaneriPremises(input: KabaneriInput): Premise[] {
     {
       label: '通常時消費',
       value: `約${mPerG.toFixed(3)}枚/G`,
-      basis: `50 ÷ ${PREMISES.baseGamesPer50}（なな徹シミュ条件）`,
+      basis: `50 ÷ ${PREMISES.baseGamesPer50}（web情報シミュ条件）`,
     },
     {
-      label: 'なな徹期待値表',
-      value: 'https://nana-press.com/kaiseki/machine/1097/35403/',
+      label: '出典',
+      value: 'web情報の天井期待値表',
       basis: '等価期待値・平均投資。周期数は考慮しない',
     },
   ]

@@ -29,7 +29,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 }
 
 const MODE_OPTIONS: { id: MonkeyMode; label: string }[] = [
-  { id: 'unknown', label: '不明（なな徹表のみ）' },
+  { id: 'unknown', label: '不明（web情報表のみ）' },
   { id: 'A', label: 'モードA（最大6周期）' },
   { id: 'B', label: 'モードB（最大3周期）' },
   { id: 'heaven', label: '天国（1周期）' },
@@ -187,7 +187,7 @@ export default function MonkeyTurnVPage() {
             <span>{formatNum(result.expectedWinMedals, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表ベース</span>
+            <span className="mode">web情報表ベース</span>
             <span>{formatRate(result.tablePayoutRate)}</span>
           </div>
           <div className="result-row result-row-kaba">
@@ -207,7 +207,7 @@ export default function MonkeyTurnVPage() {
             <span>{formatNum(result.avgInvestment, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・平均G</span>
+            <span className="mode">web情報表・平均G</span>
             <span>{formatNum(result.tableAvgGames, 1)}G</span>
           </div>
           {result.modelGamesToAt != null && (
@@ -221,11 +221,11 @@ export default function MonkeyTurnVPage() {
             <span>{formatNum(result.remainingByG, 0)}G</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・等価期待値</span>
+            <span className="mode">web情報表・等価期待値</span>
             <span>{formatYen(result.tableYenEv)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">なな徹表・平均投資</span>
+            <span className="mode">web情報表・平均投資</span>
             <span>
               {result.tableInvestYen == null
                 ? '—'
@@ -237,7 +237,7 @@ export default function MonkeyTurnVPage() {
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・AT終了でヤメ／出玉率＝なな徹表＋周期補正→閉店補正
+            設定1固定・AT終了でヤメ／出玉率＝web情報表＋周期補正→閉店補正
           </p>
           <ul>
             {premises.map((p) => (
@@ -252,7 +252,7 @@ export default function MonkeyTurnVPage() {
             ))}
           </ul>
           <p className="footnote">
-            期待出玉率＝なな徹表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の一定獲得。モード不明時は表のみ（保守）。ライバルモード・EXアイテムは落ち台では稀なため未入力。
+            期待出玉率＝web情報表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の一定獲得。モード不明時は表のみ（保守）。ライバルモード・EXアイテムは落ち台では稀なため未入力。
           </p>
         </section>
         <BackToHomeButton footer />

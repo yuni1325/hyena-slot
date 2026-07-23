@@ -49,4 +49,32 @@ export const machineCards: MachineCard[] = [
     shortName: 'SAO2',
     blurb: 'AT間実GとCZ間（実G・表示G・モード）から期待出玉率を算出',
   },
+  {
+    id: 'million-god',
+    path: '/machines/million-god',
+    name: 'スマスロ ミリオンゴッド-神々の軌跡-',
+    shortName: 'ミリオンゴッド',
+    blurb: 'GG間の現在Gとリセット有無から天井期待値を算出',
+  },
+  {
+    id: 'kokaku',
+    path: '/machines/kokaku',
+    name: 'スマスロ 攻殻機動隊',
+    shortName: '攻殻機動隊',
+    blurb: 'AT間G・表示G・殲滅モード・状況から期待出玉率を算出',
+  },
+  {
+    id: 'shinuchi-yoshimune',
+    path: '/machines/shinuchi-yoshimune',
+    name: '真打 吉宗',
+    shortName: '真打吉宗',
+    blurb: 'AT間G・CZ間G・周期・モード・状況から期待出玉率を算出',
+  },
+  {
+    id: 'karakuri2',
+    path: '/machines/karakuri2',
+    name: 'Lパチスロ からくりサーカス2',
+    shortName: 'からくりサーカス2',
+    blurb: '実G・表示G・モード・CZスルー・状況から期待出玉率を算出',
+  },
 ]

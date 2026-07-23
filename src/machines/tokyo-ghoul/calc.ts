@@ -171,12 +171,12 @@ export function buildGhoulPremises(input: GhoulInput): Premise[] {
       label: '出玉率の主軸',
       value: 'AT間表とCZ間表の高い方を採用',
       basis:
-        '実G→AT間天井（なな徹）、表示G→CZ間天井（なな徹）。両方有効なら出玉率が高い経路を主表示',
+        '実G→AT間天井（web情報）、表示G→CZ間天井（web情報）。両方有効なら出玉率が高い経路を主表示',
     },
     {
       label: '初当たり（AT）期待獲得出玉',
       value: `約${PREMISES.atWinMedals.toFixed(1)}枚`,
-      basis: 'AT間なな徹表の invest+期待値から逆算。CZ当選は初当たりに含めない',
+      basis: 'AT間web情報表の invest+期待値から逆算。CZ当選は初当たりに含めない',
     },
     {
       label: 'AT間天井',
@@ -196,7 +196,7 @@ export function buildGhoulPremises(input: GhoulInput): Premise[] {
     {
       label: 'ヤメ時（表の条件）',
       value: 'AT/CZ終了後即ヤメ',
-      basis: 'なな徹シミュ条件',
+      basis: 'web情報シミュ条件',
     },
     {
       label: '通常時消費',
@@ -214,8 +214,8 @@ export function buildGhoulPremises(input: GhoulInput): Premise[] {
       derived: true,
     },
     {
-      label: 'なな徹',
-      value: 'https://nana-press.com/kaiseki/machine/889/27250/',
+      label: '出典',
+      value: 'web情報の天井期待値表',
       basis: 'AT間・CZ間それぞれの期待値表。モード・スイカ加算は表側で未考慮',
     },
   ]

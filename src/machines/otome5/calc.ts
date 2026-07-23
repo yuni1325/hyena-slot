@@ -391,13 +391,13 @@ export function buildOtome5Premises(input: Otome5Input): Premise[] {
   return [
     {
       label: '出玉率の主軸',
-      value: 'なな徹ゲーム数天井期待値表（暫定）',
+      value: 'web情報ゲーム数天井期待値表（暫定）',
       basis:
         '周期未考慮の表をベースに、周期条件を50%補正。表は規定G・周期モード未考慮',
     },
     {
       label: '初当たり（AT）期待獲得出玉（分子）',
-      value: `${PREMISES.tableWinMedals.toFixed(2)}枚（なな徹表・一定）`,
+      value: `${PREMISES.tableWinMedals.toFixed(2)}枚（web情報表・一定）`,
       basis: '表の invest+期待値から逆算。純増2.7枚/G固定・AT終了即ヤメ',
     },
     {
@@ -428,7 +428,7 @@ export function buildOtome5Premises(input: Otome5Input): Premise[] {
     {
       label: 'テーブル別',
       value: '通常A=6 / 通常B=3 / 天国=1（短縮時は最大4まで）',
-      basis: 'なな徹。1周期目の到達Gは引き戻し、以降は混合平均',
+      basis: 'web情報。1周期目の到達Gは引き戻し、以降は混合平均',
     },
     {
       label: 'モード別',
@@ -440,16 +440,16 @@ export function buildOtome5Premises(input: Otome5Input): Premise[] {
     {
       label: '周期AT期待度（補正用）',
       value: '1–2周期40% / 3–5周期30% / 天井周期100%',
-      basis: 'なな徹設定1。「30%以上」は保守で30%',
+      basis: 'web情報設定1。「30%以上」は保守で30%',
     },
     {
       label: '通常時消費',
       value: `約${mPerG.toFixed(3)}枚/G`,
-      basis: `50 ÷ ${PREMISES.baseGamesPer50}（なな徹シミュ条件）`,
+      basis: `50 ÷ ${PREMISES.baseGamesPer50}（web情報シミュ条件）`,
     },
     {
-      label: 'なな徹',
-      value: 'https://nana-press.com/kaiseki/machine/1160/37315/',
+      label: '出典',
+      value: 'web情報の天井期待値表',
       basis: '天井期待値は暫定版',
     },
   ]

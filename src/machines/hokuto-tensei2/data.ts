@@ -1,7 +1,6 @@
 /**
  * スマスロ北斗の拳 転生の章2 — 規定あべし振り分け（設定1）
- * 出典:
- * - https://nana-press.com/kaiseki/machine/1059/34309/
+ * 出典: web情報／一撃
  * - https://1geki.jp/slot/l_hokuto_tensei2/45/
  *
  * 期待値の当て方は人生期待値論の公表値逆算ノートに準拠:
@@ -47,7 +46,7 @@ export const SHUTTER_CAP = 896
 
 /**
  * モード滞在率（設定1・公開値）
- * 出典: なな徹「状況別のモード振り分け」
+ * 出典: web情報「状況別のモード振り分け」
  */
 export const MODE_STAY_RATE: Record<Phase, Record<HokutoMode, number>> = {
   afterAt: { A: 51.9, B: 23.7, C: 17.6, heaven: 6.8 },

@@ -1,8 +1,6 @@
 /**
  * L戦国乙女5 業火を穿つ宿焔の双刃 — 設定1・ハイエナ用定数
- * 出典:
- * - https://nana-press.com/kaiseki/machine/1160/37315/ （天井期待値・暫定）
- * - https://nana-press.com/kaiseki/machine/1160/37320/ （周期・モード）
+ * 出典: web情報（天井・周期・暫定）／一撃／DMM
  * - https://1geki.jp/slot/l_otome5/
  * - https://p-town.dmm.com/machines/5009
  *
@@ -17,7 +15,7 @@ export type EvRow = {
   reachRate: number
 }
 
-/** なな徹・通常天井（実G・等価・設定1・暫定） */
+/** web情報・通常天井（実G・等価・設定1・暫定） */
 export const EV_NORMAL: EvRow[] = [
   { games: 0, yen: -1541, investYen: 11597, reachRate: 7.66 },
   { games: 50, yen: -1409, investYen: 11465, reachRate: 8.71 },
@@ -41,7 +39,7 @@ export const EV_NORMAL: EvRow[] = [
   { games: 950, yen: 8569, investYen: 1487, reachRate: 88.16 },
 ]
 
-/** なな徹・設定変更天井（実G・等価・設定1・暫定） */
+/** web情報・設定変更天井（実G・等価・設定1・暫定） */
 export const EV_SHORTENED: EvRow[] = [
   { games: 0, yen: -1355, investYen: 10199, reachRate: 18.79 },
   { games: 50, yen: -1031, investYen: 9875, reachRate: 21.37 },
@@ -69,7 +67,7 @@ export const PREMISES = {
   ceilingG: { normal: 999, shortened: 650 },
   maxCycle: { normal: 6, shortened: 4 },
   /**
-   * 周期到達時AT期待度（設定1・なな徹）。
+   * 周期到達時AT期待度（設定1・web情報）。
    * 3〜5周期は「30%以上」→保守で30%。
    */
   cycleAtRate: {

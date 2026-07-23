@@ -14,13 +14,19 @@ import {
   formatYen,
   rateTone,
 } from '../lib/format'
-import { buildSao2Premises, calculateSao2 } from '../machines/sao2/calc'
+import {
+  buildYoshimunePremises,
+  calculateYoshimune,
+} from '../machines/shinuchi-yoshimune/calc'
 import {
   CZ_MODE_IDS,
   CZ_MODE_LABEL,
+  CZ_MODE_MAX_CYCLE,
   PREMISES,
+  SITUATION_LABEL,
   type CzModeId,
-} from '../machines/sao2/data'
+  type Situation,
+} from '../machines/shinuchi-yoshimune/data'
 
 function parseIntSafe(text: string, fallback = 0): number {
   const n = Number(text)
@@ -28,33 +34,27 @@ function parseIntSafe(text: string, fallback = 0): number {
   return Math.floor(n)
 }
 
-export default function Sao2Page() {
+export default function ShinuchiYoshimunePage() {
   const [atText, setAtText] = useState('0')
   const [czText, setCzText] = useState('0')
-  const [displayText, setDisplayText] = useState('0')
+  const [cycleText, setCycleText] = useState('1')
+  const [situation, setSituation] = useState<Situation>('normal')
   const [czMode, setCzMode] = useState<CzModeId>('A')
-  const [czShortened, setCzShortened] = useState(false)
   const [closingHours, setClosingHours] = useState<ClosingHours>(
     DEFAULT_CLOSING_HOURS,
   )
 
   const atGames = useMemo(() => parseIntSafe(atText), [atText])
   const czGames = useMemo(() => parseIntSafe(czText), [czText])
-  const displayGames = useMemo(() => parseIntSafe(displayText), [displayText])
+  const cycle = useMemo(() => Math.max(1, parseIntSafe(cycleText, 1)), [cycleText])
 
   const input = useMemo(
-    () => ({
-      atGames,
-      czGames,
-      displayGames,
-      czMode,
-      czShortened,
-    }),
-    [atGames, czGames, displayGames, czMode, czShortened],
+    () => ({ atGames, czGames, cycle, situation, czMode }),
+    [atGames, czGames, cycle, situation, czMode],
   )
 
-  const result = useMemo(() => calculateSao2(input), [input])
-  const premises = useMemo(() => buildSao2Premises(input), [input])
+  const result = useMemo(() => calculateYoshimune(input), [input])
+  const premises = useMemo(() => buildYoshimunePremises(input), [input])
 
   const closing = useMemo(
     () =>
@@ -85,10 +85,12 @@ export default function Sao2Page() {
 
   const primaryLabel =
     result.primaryPath === 'at'
-      ? 'AT間（実G）が有利'
+      ? 'AT間が有利'
       : result.primaryPath === 'cz'
-        ? 'CZ経由（実G/表示G）が有利'
+        ? 'CZ／周期経由が有利'
         : '—'
+
+  const maxCycleForMode = CZ_MODE_MAX_CYCLE[czMode]
 
   return (
     <div className="app">
@@ -100,61 +102,62 @@ export default function Sao2Page() {
             HYENA SLOT
           </Link>
         </p>
-        <h1 className="machine-name">スロット ソードアート・オンラインⅡ</h1>
+        <h1 className="machine-name">真打 吉宗</h1>
         <p className="tagline">
-          AT間実GとCZ間（実G・表示G・モード）から期待値を確認
+          AT間G・CZ間G・周期・モード・状況から期待値を確認
         </p>
       </header>
 
       <main className="panel">
         <label className="field">
-          <span>実G数（AT間）</span>
+          <span>現在のG数（AT間）</span>
           <input
             type="number"
             inputMode="numeric"
             min={0}
-            max={1300}
+            max={1600}
             value={atText}
             onChange={(e) => setAtText(e.target.value)}
             onBlur={() => setAtText(String(atGames))}
           />
         </label>
-        <p className="inline-note">AT間天井1200G+α。web情報表の打ち出しG。</p>
+        <p className="inline-note">
+          通常1500G／リセット1000G／真BIG後700GでAT。
+        </p>
 
         <label className="field">
-          <span>実G数（CZ間）</span>
+          <span>現在のG数（CZ間）</span>
           <input
             type="number"
             inputMode="numeric"
             min={0}
-            max={600}
+            max={1100}
             value={czText}
             onChange={(e) => setCzText(e.target.value)}
             onBlur={() => setCzText(String(czGames))}
           />
         </label>
-        <p className="inline-note">
-          CZ間の実ゲーム数。通常499G+α／短縮256G+αでCZ。
-        </p>
+        <p className="inline-note">CZ間1000GでCZ。周期天井との近い方で近似。</p>
 
         <label className="field">
-          <span>表示G数（液晶）</span>
+          <span>現在周期</span>
           <input
             type="number"
             inputMode="numeric"
-            min={0}
-            max={900}
-            value={displayText}
-            onChange={(e) => setDisplayText(e.target.value)}
-            onBlur={() => setDisplayText(String(displayGames))}
+            min={1}
+            max={6}
+            value={cycleText}
+            onChange={(e) => setCycleText(e.target.value)}
+            onBlur={() =>
+              setCycleText(
+                String(Math.min(maxCycleForMode, Math.max(1, cycle))),
+              )
+            }
           />
         </label>
-        <p className="inline-note">
-          液晶の加算G。モード別天井（A/B800・C650・D350・天国100）。
-        </p>
 
         <label className="field">
-          <span>内部モード（液晶CZ天井）</span>
+          <span>CZモード</span>
           <select
             value={czMode}
             onChange={(e) => setCzMode(e.target.value as CzModeId)}
@@ -166,15 +169,21 @@ export default function Sao2Page() {
             ))}
           </select>
         </label>
+        <p className="inline-note">
+          不明時は通常A想定。通常Cは周期到達でAT直撃。下にモード別一覧あり。
+        </p>
 
         <label className="field">
-          <span>CZ間実G短縮</span>
+          <span>状況</span>
           <select
-            value={czShortened ? 'on' : 'off'}
-            onChange={(e) => setCzShortened(e.target.value === 'on')}
+            value={situation}
+            onChange={(e) => setSituation(e.target.value as Situation)}
           >
-            <option value="off">なし（499G+α）</option>
-            <option value="on">あり（256G+α・設定変更／初回上位CZ失敗後など）</option>
+            {(Object.keys(SITUATION_LABEL) as Situation[]).map((id) => (
+              <option key={id} value={id}>
+                {SITUATION_LABEL[id]}
+              </option>
+            ))}
           </select>
         </label>
 
@@ -188,7 +197,7 @@ export default function Sao2Page() {
           <ClosingCorrectionRows
             closing={closing}
             bonusLabel="AT"
-            machineId="sao2"
+            machineId="shinuchi-yoshimune"
             pureIncPerGame={PREMISES.pureInc}
           />
           <div className="result-row result-row-kaba">
@@ -204,36 +213,8 @@ export default function Sao2Page() {
             <span>{formatRate(result.atPayoutRate)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">CZ経由・出玉率（補正前）</span>
+            <span className="mode">CZ／周期・出玉率（補正前）</span>
             <span>{formatRate(result.czPayoutRate)}</span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">AT天井まで</span>
-            <span>
-              {formatNum(result.atRemaining, 0)}G / {result.atCeilingG}G
-            </span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">CZ実G天井まで</span>
-            <span>
-              {formatNum(result.czActualRemaining, 0)}G /{' '}
-              {result.czActualCeilingG}G
-            </span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">CZ液晶天井まで</span>
-            <span>
-              {formatNum(result.czDisplayRemaining, 0)}G /{' '}
-              {result.czDisplayCeilingG}G
-            </span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">CZまで（近い方）</span>
-            <span>{formatNum(result.czEffectiveRemaining, 0)}G</span>
-          </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">平均G（採用経路）</span>
-            <span>{formatNum(result.avgGames, 1)}G</span>
           </div>
           <div className="result-row result-row-kaba">
             <span className="mode">AT間・等価期待値</span>
@@ -247,18 +228,53 @@ export default function Sao2Page() {
                 : `${Math.round(result.atInvestYen).toLocaleString('ja-JP')}円`}
             </span>
           </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">AT間・天井到達率</span>
+            <span>{formatRate(result.atReachRate)}</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">AT天井まで</span>
+            <span>
+              {formatNum(result.atRemaining, 0)}G / {result.atCeilingG}G
+            </span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">CZ間天井まで</span>
+            <span>
+              {formatNum(result.czGamesRemaining, 0)}G /{' '}
+              {result.czGamesCeilingG}G
+            </span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">周期天井まで</span>
+            <span>
+              残り{formatNum(result.cycleRemaining, 0)}周期（最大
+              {result.maxCycle}）
+            </span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">CZまで（近い方・目安G）</span>
+            <span>{formatNum(result.czEffectiveRemaining, 0)}G</span>
+          </div>
+          <div className="result-row result-row-kaba">
+            <span className="mode">平均G（採用経路）</span>
+            <span>{formatNum(result.avgGames, 1)}G</span>
+          </div>
         </section>
 
-        <h2 className="results-section-title">モード別・CZ経由（閉店補正後）</h2>
+        <h2 className="results-section-title">
+          モード別・CZ／周期経由（閉店補正後）
+        </h2>
         <p className="inline-note">
-          液晶天井だけ変えた内訳。平均CZ1/238.4と天井の競合＋成功率55%。失敗後はフル天井リセット。
+          周期・CZ間G固定でモードだけ変えた内訳。1周期≈
+          {PREMISES.avgGamesPerCycle}G目安。通常Cは到達でAT直撃。
         </p>
         <section className="results" aria-label="モード別">
           <div className="results-head results-head-scenario">
             <span>モード</span>
             <span>出玉率</span>
             <span>平均G</span>
-            <span>液晶残り</span>
+            <span>周期残</span>
           </div>
           {modeRows.map((r) => (
             <div
@@ -268,7 +284,7 @@ export default function Sao2Page() {
               <span className="mode">{r.label}</span>
               <span className="rate">{formatRate(r.closedRate)}</span>
               <span>{formatNum(r.avgGamesToAtViaCz, 1)}G</span>
-              <span>{formatNum(r.displayRemaining, 0)}G</span>
+              <span>{formatNum(r.cycleRemaining, 0)}</span>
             </div>
           ))}
         </section>
@@ -276,7 +292,7 @@ export default function Sao2Page() {
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・AT終了即ヤメ／AT間表とCZ近似の高い方→閉店補正
+            設定1固定・AT表とCZ/周期近似の高い方→閉店補正。夜回りptは未入力。
           </p>
           <ul>
             {premises.map((p) => (
@@ -291,7 +307,7 @@ export default function Sao2Page() {
             ))}
           </ul>
           <p className="footnote">
-            web情報AT間表はCZ天井・モード未考慮の暫定版。CZ経路は公表CZ確率で途中当選を平均化し、シューティングチャージやバレット個数は個別には見ていない。天国まで転落なし。
+            狙い目目安（web情報・等価）: 通常650G〜／リセット350G〜／真BIG後200G〜。周期は5周期目〜。
           </p>
         </section>
         <BackToHomeButton footer />
