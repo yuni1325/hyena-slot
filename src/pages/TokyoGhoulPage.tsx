@@ -34,7 +34,7 @@ const CZ_OPTIONS: CzCeilingKind[] = [
 ]
 
 export default function TokyoGhoulPage() {
-  const [actualText, setActualText] = useState('0')
+  const [actualText, setActualText] = useState('304')
   const [displayText, setDisplayText] = useState('0')
   const [czCeiling, setCzCeiling] = useState<CzCeilingKind>('normal600')
   const [closingHours, setClosingHours] = useState<ClosingHours>(

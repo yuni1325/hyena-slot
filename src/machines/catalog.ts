@@ -26,7 +26,7 @@ export const machineCards: MachineCard[] = [
     path: '/machines/monkey-turn-v',
     name: 'スマスロモンキーターンⅤ',
     shortName: 'モンキーターンV',
-    blurb: '実G・周期・モード・短縮から期待出玉率を算出',
+    blurb: '実G・表示G・周期・モード・短縮から期待出玉率を算出',
   },
   {
     id: 'tokyo-ghoul',

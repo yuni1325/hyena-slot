@@ -5,7 +5,7 @@
  * - https://p-town.dmm.com/machines/4450
  *
  * 出玉率の主軸はweb情報ゲーム数天井期待値表（周期・モード未考慮）。
- * 周期・モードは補正として加味する。
+ * 周期・モード・表示Gは補正として加味する。
  */
 
 export type EvRow = {
@@ -15,7 +15,20 @@ export type EvRow = {
   reachRate: number
 }
 
+/** 不明は通常Aとして主計算する */
 export type MonkeyMode = 'A' | 'B' | 'heaven' | 'unknown'
+
+export const MODE_IDS: Array<Exclude<MonkeyMode, 'unknown'>> = [
+  'A',
+  'B',
+  'heaven',
+]
+
+export const MODE_LABEL: Record<Exclude<MonkeyMode, 'unknown'>, string> = {
+  A: '通常A（最大6周期）',
+  B: '通常B（最大3周期）',
+  heaven: '天国（1周期）',
+}
 
 /** web情報・通常条件（ST後想定・周期未考慮） */
 export const EV_NORMAL: EvRow[] = [
@@ -52,13 +65,11 @@ export const EV_SHORTENED: EvRow[] = [
 ]
 
 export const PREMISES = {
-  /** web情報表から逆算した一定獲得（invest+yen） */
   tableWinMedals: (EV_NORMAL[0].investYen + EV_NORMAL[0].yen) / 20,
   atHitDenom: 299.8,
   payoutRate: 97.75,
   baseGamesPer50: 32.0,
   yenPerMedal: 20,
-  /** AT純増目安（枚/G）・閉店時の所要G概算用 */
   pureInc: 4.0,
   ceilingG: { normal: 795, shortened: 495 },
   maxCycle: { normal: 6, shortened: 4 },
@@ -66,21 +77,26 @@ export const PREMISES = {
     Exclude<MonkeyMode, 'unknown'>,
     number
   >,
-  /** 1周期平均約80G、2周期以降平均約100G（web情報・1激） */
-  cycleAvgGames: { 1: 80, later: 100 } as const,
   /**
-   * 周期到達時のAT当選率（ユーザー指定）。
-   * ◎≈25% / ○≈3% / △≈1% / 「-」はほぼ無し / 天井周期=100%
-   * 参考: 1周期全体≈40%・2周期以内≈64%はモード混合の話で、モードA単体の1周期は低い。
+   * 表示G（周期内）の到達目安。
+   * 1周期: 平均約80G・ハード天井222（pt相当）
+   * 2周期以降: 平均約100G
+   */
+  cycleAvgReachDisplay: { 1: 80, later: 100 } as const,
+  /** 周期ごとの表示Gハード上限（規定pt到達の上限に相当） */
+  cycleDisplayHardCap: { 1: 222, mid: 666, last: 444 } as const,
+  /**
+   * 周期到達時のAT当選率。
+   * ◎≈25% / ○≈3% / △≈1% / 「-」≈0% / 天井=100%
+   * 参考: トータル1周期≈40%・2周期以内≈64%はモード混合
    */
   cycleAtRate: {
     A: { 1: 0, 2: 0.25, 3: 0.01, 4: 0.03, 5: 0.25, 6: 1 },
     B: { 1: 0, 2: 0.25, 3: 1 },
     heaven: { 1: 1 },
   } as Record<Exclude<MonkeyMode, 'unknown'>, Record<number, number>>,
-  /** モード不明時は表のみ（周期補正なし） */
-  cycleCorrectionScale: 0.5,
-  /** CZ「超抜」成功≈50% は表に織込み済み想定。補正では周期経路のみ */
+  /** 表と周期モデルのブレンド（周期差を出玉率に反映） */
+  cycleCorrectionScale: 0.75,
 } as const
 
 export function medalsPerGame(): number {
@@ -111,4 +127,16 @@ export function interpolateEv(rows: EvRow[], games: number): EvRow {
 
 export function winMedalsFromEv(row: EvRow): number {
   return (row.investYen + row.yen) / PREMISES.yenPerMedal
+}
+
+export function hardCapForCycle(cycle: number): number {
+  if (cycle <= 1) return PREMISES.cycleDisplayHardCap[1]
+  if (cycle >= 6) return PREMISES.cycleDisplayHardCap.last
+  return PREMISES.cycleDisplayHardCap.mid
+}
+
+export function avgReachForCycle(cycle: number): number {
+  return cycle === 1
+    ? PREMISES.cycleAvgReachDisplay[1]
+    : PREMISES.cycleAvgReachDisplay.later
 }

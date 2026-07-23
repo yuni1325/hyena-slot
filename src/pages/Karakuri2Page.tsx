@@ -51,7 +51,7 @@ function primaryPathLabel(
 }
 
 export default function Karakuri2Page() {
-  const [actualText, setActualText] = useState('0')
+  const [actualText, setActualText] = useState('314')
   const [displayText, setDisplayText] = useState('0')
   const [throughText, setThroughText] = useState('0')
   const [situation, setSituation] = useState<Situation>('normal')

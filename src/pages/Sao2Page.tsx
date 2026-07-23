@@ -29,7 +29,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 }
 
 export default function Sao2Page() {
-  const [atText, setAtText] = useState('0')
+  const [atText, setAtText] = useState('437')
   const [czText, setCzText] = useState('0')
   const [displayText, setDisplayText] = useState('0')
   const [czMode, setCzMode] = useState<CzModeId>('A')

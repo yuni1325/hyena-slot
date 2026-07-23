@@ -35,7 +35,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 }
 
 export default function ShinuchiYoshimunePage() {
-  const [atText, setAtText] = useState('0')
+  const [atText, setAtText] = useState('447')
   const [czText, setCzText] = useState('0')
   const [cycleText, setCycleText] = useState('1')
   const [situation, setSituation] = useState<Situation>('normal')

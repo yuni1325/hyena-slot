@@ -13,14 +13,20 @@ import {
   formatNum,
   formatRate,
   formatYen,
+  rateTone,
 } from '../lib/format'
 import {
   buildMonkeyPremises,
   calculateMonkey,
   clampCycle,
   effectiveMaxCycle,
+  resolveMode,
 } from '../machines/monkey-turn-v/calc'
-import { PREMISES, type MonkeyMode } from '../machines/monkey-turn-v/data'
+import {
+  MODE_LABEL,
+  PREMISES,
+  type MonkeyMode,
+} from '../machines/monkey-turn-v/data'
 
 function parseIntSafe(text: string, fallback = 0): number {
   const n = Number(text)
@@ -29,15 +35,16 @@ function parseIntSafe(text: string, fallback = 0): number {
 }
 
 const MODE_OPTIONS: { id: MonkeyMode; label: string }[] = [
-  { id: 'unknown', label: '不明（web情報表のみ）' },
-  { id: 'A', label: 'モードA（最大6周期）' },
-  { id: 'B', label: 'モードB（最大3周期）' },
+  { id: 'unknown', label: '不明（通常Aとして計算）' },
+  { id: 'A', label: '通常A（最大6周期）' },
+  { id: 'B', label: '通常B（最大3周期）' },
   { id: 'heaven', label: '天国（1周期）' },
 ]
 
 export default function MonkeyTurnVPage() {
-  const [actualText, setActualText] = useState('0')
-  const [cycleText, setCycleText] = useState('1')
+  const [actualText, setActualText] = useState('307')
+  const [displayText, setDisplayText] = useState('0')
+  const [cycleText, setCycleText] = useState('2')
   const [mode, setMode] = useState<MonkeyMode>('unknown')
   const [shortened, setShortened] = useState(false)
   const [closingHours, setClosingHours] = useState<ClosingHours>(
@@ -45,11 +52,13 @@ export default function MonkeyTurnVPage() {
   )
 
   const actualGames = useMemo(() => parseIntSafe(actualText), [actualText])
+  const displayGames = useMemo(() => parseIntSafe(displayText), [displayText])
   const rawCycle = useMemo(() => {
     const n = parseIntSafe(cycleText, 1)
     return Math.min(6, Math.max(1, n))
   }, [cycleText])
 
+  const resolvedMode = useMemo(() => resolveMode(mode), [mode])
   const maxCycle = useMemo(
     () => effectiveMaxCycle(mode, shortened),
     [mode, shortened],
@@ -71,8 +80,8 @@ export default function MonkeyTurnVPage() {
   }, [maxCycle])
 
   const input = useMemo(
-    () => ({ actualGames, cycle, mode, shortened }),
-    [actualGames, cycle, mode, shortened],
+    () => ({ actualGames, displayGames, cycle, mode, shortened }),
+    [actualGames, displayGames, cycle, mode, shortened],
   )
 
   const result = useMemo(() => calculateMonkey(input), [input])
@@ -90,6 +99,26 @@ export default function MonkeyTurnVPage() {
     [closingHours, result],
   )
 
+  const modeRows = useMemo(
+    () =>
+      result.byMode.map((row) => {
+        const c = applyClosingCorrection({
+          hoursUntilClose: closingHours,
+          avgGamesToHit: row.avgGames,
+          expectedWinMedals: result.expectedWinMedals,
+          pureIncPerGame: PREMISES.pureInc,
+          rawPayoutRate: row.expectedPayoutRate,
+        })
+        return { ...row, closedRate: c.correctedPayoutRate }
+      }),
+    [closingHours, result],
+  )
+
+  const refModes = useMemo(
+    () => modeRows.filter((r) => r.id === 'B' || r.id === 'heaven'),
+    [modeRows],
+  )
+
   return (
     <div className="app">
       <div className="bg-grid" aria-hidden />
@@ -101,7 +130,9 @@ export default function MonkeyTurnVPage() {
           </Link>
         </p>
         <h1 className="machine-name">スマスロモンキーターンⅤ</h1>
-        <p className="tagline">実G・周期・モード・短縮から天井狙いの期待値を確認</p>
+        <p className="tagline">
+          実G・表示G・周期・モード・短縮から天井狙いの期待値を確認
+        </p>
       </header>
 
       <main className="panel">
@@ -118,7 +149,23 @@ export default function MonkeyTurnVPage() {
           />
         </label>
         <p className="inline-note">
-          データカウンター等の実G（AT間）。液晶の表示Gとは違うことがあります。
+          データカウンター等の実G（AT間）。web情報表の打ち出しG。
+        </p>
+
+        <label className="field">
+          <span>表示G数</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={666}
+            value={displayText}
+            onChange={(e) => setDisplayText(e.target.value)}
+            onBlur={() => setDisplayText(String(displayGames))}
+          />
+        </label>
+        <p className="inline-note">
+          液晶の当該周期内G。1周期目はハード天井222（平均到達≈80G）。2〜5周期は上限666、6周期は444。
         </p>
 
         <label className="field">
@@ -134,6 +181,11 @@ export default function MonkeyTurnVPage() {
             ))}
           </select>
         </label>
+        <p className="inline-note">
+          主表示は{MODE_LABEL[resolvedMode]}
+          {mode === 'unknown' ? '（不明のためA）' : ''}
+          。B・天国は下部に参考表示。
+        </p>
 
         <label className="field">
           <span>現在周期</span>
@@ -153,8 +205,8 @@ export default function MonkeyTurnVPage() {
           <p className="inline-note">
             選択可能: 1〜{maxCycle}周期目
             {shortened ? '（短縮時は最大4）' : ''}
-            {mode === 'B' ? '（モードBは最大3）' : ''}
-            {mode === 'heaven' ? '（天国は1周期天井）' : ''}
+            {resolvedMode === 'B' ? '（モードBは最大3）' : ''}
+            {resolvedMode === 'heaven' ? '（天国は1周期天井）' : ''}
           </p>
         )}
 
@@ -187,16 +239,16 @@ export default function MonkeyTurnVPage() {
             <span>{formatNum(result.expectedWinMedals, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
+            <span className="mode">主計算モード</span>
+            <span>{MODE_LABEL[result.resolvedMode]}</span>
+          </div>
+          <div className="result-row result-row-kaba">
             <span className="mode">web情報表ベース</span>
             <span>{formatRate(result.tablePayoutRate)}</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">周期・モード補正</span>
-            <span>
-              {mode === 'unknown'
-                ? '—（モード不明のため表のみ）'
-                : formatCorrectionPp(result.cycleCorrectionPp)}
-            </span>
+            <span className="mode">周期・表示G補正</span>
+            <span>{formatCorrectionPp(result.cycleCorrectionPp)}</span>
           </div>
           <div className="result-row result-row-kaba">
             <span className="mode">平均G（補正後）</span>
@@ -221,6 +273,10 @@ export default function MonkeyTurnVPage() {
             <span>{formatNum(result.remainingByG, 0)}G</span>
           </div>
           <div className="result-row result-row-kaba">
+            <span className="mode">当該周期・表示G残り</span>
+            <span>{formatNum(result.remainingInCycleDisplay, 0)}G</span>
+          </div>
+          <div className="result-row result-row-kaba">
             <span className="mode">web情報表・等価期待値</span>
             <span>{formatYen(result.tableYenEv)}</span>
           </div>
@@ -234,10 +290,37 @@ export default function MonkeyTurnVPage() {
           </div>
         </section>
 
+        <h2 className="results-section-title">
+          参考・モードB／天国（閉店補正後）
+        </h2>
+        <p className="inline-note">
+          実G・表示G・周期は同じ条件で、モードだけ変えた場合の出玉率。主表示は
+          {MODE_LABEL[result.resolvedMode]}。
+        </p>
+        <section className="results" aria-label="モード別参考">
+          <div className="results-head results-head-scenario">
+            <span>モード</span>
+            <span>出玉率</span>
+            <span>平均G</span>
+            <span>周期残</span>
+          </div>
+          {refModes.map((r) => (
+            <div
+              key={r.id}
+              className={`result-row result-row-scenario tone-${rateTone(r.closedRate)}`}
+            >
+              <span className="mode">{r.label}</span>
+              <span className="rate">{formatRate(r.closedRate)}</span>
+              <span>{formatNum(r.avgGames, 1)}G</span>
+              <span>{formatNum(r.remainingInCycleDisplay, 0)}G</span>
+            </div>
+          ))}
+        </section>
+
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・AT終了でヤメ／出玉率＝web情報表＋周期補正→閉店補正
+            設定1固定・AT終了でヤメ／出玉率＝web情報表＋周期・表示G補正→閉店補正。モード不明は通常A。
           </p>
           <ul>
             {premises.map((p) => (
@@ -252,7 +335,7 @@ export default function MonkeyTurnVPage() {
             ))}
           </ul>
           <p className="footnote">
-            期待出玉率＝web情報表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の一定獲得。モード不明時は表のみ（保守）。ライバルモード・EXアイテムは落ち台では稀なため未入力。
+            1周期目は表示Gハード222・平均80G。周期AT率（◎○△）とG数天井の競合を近似。ライバルモード等は未入力。
           </p>
         </section>
         <BackToHomeButton footer />

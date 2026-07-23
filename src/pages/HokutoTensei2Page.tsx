@@ -16,7 +16,7 @@ const MAX_ABESHI = 1536
 
 export default function HokutoTensei2Page() {
   const machine = machines.find((m) => m.id === 'hokuto-tensei2')!
-  const [abeshiText, setAbeshiText] = useState('0')
+  const [abeshiText, setAbeshiText] = useState('369')
   const [phase, setPhase] = useState(machine.phases?.[0]?.id ?? 'afterAt')
   const [shutter, setShutter] = useState(false)
   const [closingHours, setClosingHours] = useState<ClosingHours>(

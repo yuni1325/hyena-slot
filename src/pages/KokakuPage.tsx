@@ -34,7 +34,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 }
 
 export default function KokakuPage() {
-  const [atText, setAtText] = useState('0')
+  const [atText, setAtText] = useState('219')
   const [displayText, setDisplayText] = useState('0')
   const [situation, setSituation] = useState<Situation>('normal')
   const [zenMode, setZenMode] = useState<ZenModeId>('A')

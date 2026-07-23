@@ -31,7 +31,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 }
 
 export default function Otome5Page() {
-  const [actualText, setActualText] = useState('0')
+  const [actualText, setActualText] = useState('371')
   const [displayText, setDisplayText] = useState('0')
   const [cycleText, setCycleText] = useState('1')
   const [shortened, setShortened] = useState(false)

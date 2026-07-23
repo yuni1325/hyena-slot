@@ -26,7 +26,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 }
 
 export default function MillionGodPage() {
-  const [gamesText, setGamesText] = useState('0')
+  const [gamesText, setGamesText] = useState('325')
   const [phase, setPhase] = useState<Phase>('normal')
   const [closingHours, setClosingHours] = useState<ClosingHours>(
     DEFAULT_CLOSING_HOURS,

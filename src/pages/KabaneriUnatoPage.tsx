@@ -29,7 +29,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 }
 
 export default function KabaneriUnatoPage() {
-  const [displayText, setDisplayText] = useState('0')
+  const [displayText, setDisplayText] = useState('280')
   const [cycleText, setCycleText] = useState('1')
   const [shortened, setShortened] = useState(false)
   const [closingHours, setClosingHours] = useState<ClosingHours>(
