@@ -6,7 +6,6 @@ import {
   MODE_LABEL,
   PREMISES,
   avgReachForCycle,
-  hardCapForCycle,
   interpolateEv,
   medalsPerGame,
   winMedalsFromEv,
@@ -16,21 +15,9 @@ import {
 export type MonkeyInput = {
   /** 実G（データカウンター等・AT間） */
   actualGames: number
-  /** 表示G（液晶・当該周期内。1周期目は最大222） */
-  displayGames: number
   cycle: number
   mode: MonkeyMode
   shortened: boolean
-}
-
-/** 1周期目は表示G ≥ 実G（同時進行のため表示が実を下回らない） */
-export function isValidMonkeyGames(
-  cycle: number,
-  actualGames: number,
-  displayGames: number,
-): boolean {
-  if (cycle !== 1) return true
-  return displayGames >= actualGames
 }
 
 export type MonkeyModeRow = {
@@ -39,14 +26,13 @@ export type MonkeyModeRow = {
   expectedPayoutRate: number | null
   avgGames: number | null
   modelGamesToAt: number | null
+  /** 当該周期の想定残G（平均到達） */
   remainingInCycleDisplay: number | null
   maxCycle: number
 }
 
 export type MonkeyResult = {
   reachable: boolean
-  /** 1周期目で表示G < 実G のとき true（出玉率は出さない） */
-  invalidCycle1Games: boolean
   expectedPayoutRate: number | null
   expectedWinMedals: number | null
   tablePayoutRate: number | null
@@ -109,24 +95,16 @@ export function clampCycle(
 }
 
 /**
- * 当該周期の表示G残り。
- * 平均到達Gを優先。1周期目のみハード222G。
- * 2周期以降の規定pt上限（666等）はG数ではないので使わない。
+ * 当該周期の想定残G。表示Gは使わず平均到達を用いる。
+ * 1周期目のみハード222は平均80の根拠として残す（入力には使わない）。
  */
-export function remainingDisplayInCycle(
-  cycle: number,
-  displayGames: number,
-): number {
-  const d = Math.max(0, Math.floor(displayGames))
-  const soft = avgReachForCycle(cycle)
-  const remSoft = soft - d
-  if (remSoft > 0) return remSoft
+export function remainingInCycle(cycle: number): number {
+  return avgReachForCycle(cycle)
+}
 
-  const hard = hardCapForCycle(cycle)
-  if (hard != null) return Math.max(1, hard - d)
-
-  // 平均超過＝規定が近い想定（長く見積もると表から大きく下振れする）
-  return PREMISES.cycleOverdueRemGames
+/** @deprecated remainingInCycle を使用 */
+export function remainingDisplayInCycle(cycle: number, _displayGames?: number): number {
+  return remainingInCycle(cycle)
 }
 
 function expectedGamesUntilOrCap(p: number, t: number): number {
@@ -138,14 +116,13 @@ function expectedGamesUntilOrCap(p: number, t: number): number {
 
 /**
  * モード既知時の周期経路AT期待G。
- * 当該周期残り＝表示Gベース（1周期目ハード222）、以降は平均到達。
+ * 当該周期残り＝平均到達G、以降も平均到達。
  * 周期AT率（◎○△）とG数天井の競合を考慮。
  * 通常Bは天井2周期65%／3周期35%の事前混合（3周期到達時は後者のみ）。
  */
 export function expectedGamesToAtModel(
   cycle: number,
   actualGames: number,
-  displayGames: number,
   mode: Exclude<MonkeyMode, 'unknown'>,
   shortened: boolean,
 ): number {
@@ -157,7 +134,6 @@ export function expectedGamesToAtModel(
       return expectedGamesToAtModelFixedMax(
         cycle,
         actualGames,
-        displayGames,
         'B',
         shortened,
         3,
@@ -168,7 +144,6 @@ export function expectedGamesToAtModel(
     const e2 = expectedGamesToAtModelFixedMax(
       cycle,
       actualGames,
-      displayGames,
       'B',
       shortened,
       2,
@@ -176,7 +151,6 @@ export function expectedGamesToAtModel(
     const e3 = expectedGamesToAtModelFixedMax(
       cycle,
       actualGames,
-      displayGames,
       'B',
       shortened,
       3,
@@ -190,7 +164,6 @@ export function expectedGamesToAtModel(
   return expectedGamesToAtModelFixedMax(
     cycle,
     actualGames,
-    displayGames,
     mode,
     shortened,
     maxCycle,
@@ -200,7 +173,6 @@ export function expectedGamesToAtModel(
 function expectedGamesToAtModelFixedMax(
   cycle: number,
   actualGames: number,
-  displayGames: number,
   mode: Exclude<MonkeyMode, 'unknown'>,
   shortened: boolean,
   maxCycle: number,
@@ -229,7 +201,7 @@ function expectedGamesToAtModelFixedMax(
 
     let t: number
     if (first && c === c0) {
-      t = remainingDisplayInCycle(c, displayGames)
+      t = remainingInCycle(c)
     } else {
       t = avgReachForCycle(c)
     }
@@ -264,7 +236,6 @@ function scenarioForMode(
   mode: Exclude<MonkeyMode, 'unknown'>,
   cycle: number,
   actualGames: number,
-  displayGames: number,
   shortened: boolean,
   tableAvgGames: number,
   winMedals: number,
@@ -275,7 +246,7 @@ function scenarioForMode(
     PREMISES.modeMaxCycle[mode],
     shortened ? PREMISES.maxCycle.shortened : PREMISES.maxCycle.normal,
   )
-  const remDisplay = remainingDisplayInCycle(cycle, displayGames)
+  const remDisplay = remainingInCycle(cycle)
 
   if (actualDone || cycle > maxCycle) {
     return {
@@ -292,7 +263,6 @@ function scenarioForMode(
   const modelGames = expectedGamesToAtModel(
     cycle,
     actualGames,
-    displayGames,
     mode,
     shortened,
   )
@@ -315,7 +285,6 @@ function scenarioForMode(
 
 export function calculateMonkey(input: MonkeyInput): MonkeyResult {
   const g = Math.max(0, Math.floor(input.actualGames))
-  const display = Math.max(0, Math.floor(input.displayGames))
   const shortened = Boolean(input.shortened)
   const resolvedMode = resolveMode(input.mode)
   const ceilingG = shortened
@@ -337,52 +306,14 @@ export function calculateMonkey(input: MonkeyInput): MonkeyResult {
     tableInvestMedals > 0 ? (tableWin / tableInvestMedals) * 100 : null
   const tableAvgGames = tableInvestMedals / mPerG
   const remainingByG = Math.max(0, ceilingG - g)
-  const remDisplay = remainingDisplayInCycle(cycle, display)
+  const remDisplay = remainingInCycle(cycle)
   const actualDone = g >= ceilingG
-  const invalidCycle1Games = !isValidMonkeyGames(cycle, g, display)
-
-  const emptyByMode: MonkeyModeRow[] = MODE_IDS.map((id) => ({
-    id,
-    label: MODE_LABEL[id],
-    expectedPayoutRate: null,
-    avgGames: null,
-    modelGamesToAt: null,
-    remainingInCycleDisplay: remDisplay,
-    maxCycle: Math.min(
-      PREMISES.modeMaxCycle[id],
-      shortened ? PREMISES.maxCycle.shortened : PREMISES.maxCycle.normal,
-    ),
-  }))
-
-  if (invalidCycle1Games) {
-    return {
-      reachable: false,
-      invalidCycle1Games: true,
-      expectedPayoutRate: null,
-      expectedWinMedals: winMedals,
-      tablePayoutRate: null,
-      cycleCorrectionPp: null,
-      avgGames: null,
-      avgInvestment: null,
-      tableYenEv: null,
-      tableInvestYen: null,
-      tableAvgGames: null,
-      modelGamesToAt: null,
-      remainingByG,
-      remainingInCycleDisplay: remDisplay,
-      effectiveMaxCycle: maxCycle,
-      ceilingG,
-      resolvedMode,
-      byMode: emptyByMode,
-    }
-  }
 
   const byMode = MODE_IDS.map((id) =>
     scenarioForMode(
       id,
       cycle,
       g,
-      display,
       shortened,
       tableAvgGames,
       winMedals,
@@ -396,7 +327,6 @@ export function calculateMonkey(input: MonkeyInput): MonkeyResult {
   if (actualDone || primary.expectedPayoutRate == null) {
     return {
       reachable: false,
-      invalidCycle1Games: false,
       expectedPayoutRate: null,
       expectedWinMedals: winMedals,
       tablePayoutRate,
@@ -423,7 +353,6 @@ export function calculateMonkey(input: MonkeyInput): MonkeyResult {
 
   return {
     reachable: true,
-    invalidCycle1Games: false,
     expectedPayoutRate: primary.expectedPayoutRate,
     expectedWinMedals: winMedals,
     tablePayoutRate,
@@ -452,17 +381,16 @@ export function buildMonkeyPremises(input: MonkeyInput): Premise[] {
     : PREMISES.ceilingG.normal
   const maxCycle = effectiveMaxCycle(resolved, shortened)
   const mPerG = medalsPerGame()
-  const rem = remainingDisplayInCycle(
+  const rem = remainingInCycle(
     clampCycle(input.cycle, input.actualGames, resolved, shortened),
-    input.displayGames,
   )
 
   return [
     {
       label: '出玉率の主軸',
-      value: 'web情報表＋周期・表示G補正（通常A既定）',
+      value: 'web情報表＋周期補正（通常A既定）',
       basis:
-        '表は周期未考慮。モード不明は通常A。B・天国は下部参考。周期補正は表との差の35%を反映。Bの2/3周期振り分けは観測周期で条件付け',
+        '表は周期未考慮。モード不明は通常A。B・天国は下部参考。周期補正は表との差の35%を反映。Bの2/3周期振り分けは観測周期で条件付け。表示Gは未使用',
     },
     {
       label: '初当たり（AT）期待獲得出玉（分子）',
@@ -488,10 +416,10 @@ export function buildMonkeyPremises(input: MonkeyInput): Premise[] {
       basis: 'A=6 / B=3 / 天国=1。短縮時は全体上限4周期',
     },
     {
-      label: '当該周期の表示G残り',
+      label: '当該周期の想定残G',
       value: `約${rem.toFixed(0)}G`,
       basis:
-        '1周期目は平均80G・ハード222G。2周期以降は平均100G（666/444は規定ptでG数ではない）。平均超過時はもうすぐ規定とみなす',
+        '表示Gは使わず平均到達（1周期≈80G／以降≈100G）を当該周期残りとする',
       derived: true,
     },
     {
@@ -512,8 +440,8 @@ export function buildMonkeyPremises(input: MonkeyInput): Premise[] {
     },
     {
       label: '未反映（意図的）',
-      value: 'ライバルモード / EXアイテム / ヘルメット示唆',
-      basis: '判明時は機械割100%超だが落ち台では稀のため未入力',
+      value: 'ライバルモード / EXアイテム / ヘルメット示唆 / 表示G',
+      basis: '表示Gは入力しない。判明時の機械割補正等も未入力',
     },
   ]
 }

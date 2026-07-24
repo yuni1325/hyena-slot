@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import {
   calculateMonkey,
   effectiveMaxCycle,
-  isValidMonkeyGames,
 } from '../machines/monkey-turn-v/calc'
 import type { MonkeyMode } from '../machines/monkey-turn-v/data'
 
@@ -10,7 +9,6 @@ type ChartView = 'cycles' | 'table'
 
 type Props = {
   actualGames: number
-  displayGames: number
   cycle: number
   mode: MonkeyMode
   shortened: boolean
@@ -42,7 +40,6 @@ function polylinePoints(
   xAt: (g: number) => number,
   yAt: (r: number) => number,
 ): string[] {
-  // Split on nulls into contiguous segments
   const segments: string[] = []
   let buf: string[] = []
   for (let i = 0; i < xs.length; i++) {
@@ -60,7 +57,6 @@ function polylinePoints(
 
 export default function MonkeyPayoutChart({
   actualGames,
-  displayGames,
   cycle,
   mode,
   shortened,
@@ -78,14 +74,8 @@ export default function MonkeyPayoutChart({
       const corrected: Array<number | null> = []
       const table: Array<number | null> = []
       for (const g of actualSteps) {
-        if (!isValidMonkeyGames(cycle, g, displayGames)) {
-          corrected.push(null)
-          table.push(null)
-          continue
-        }
         const r = calculateMonkey({
           actualGames: g,
-          displayGames,
           cycle,
           mode,
           shortened,
@@ -94,8 +84,18 @@ export default function MonkeyPayoutChart({
         table.push(r.tablePayoutRate)
       }
       return [
-        { id: 'corrected', label: `${cycle}周期・補正後`, color: '#b91c1c', values: corrected },
-        { id: 'table', label: 'web情報表', color: '#64748b', values: table },
+        {
+          id: 'corrected',
+          label: `${cycle}周期・補正後`,
+          color: '#b91c1c',
+          values: corrected,
+        },
+        {
+          id: 'table',
+          label: 'web情報表',
+          color: '#64748b',
+          values: table,
+        },
       ]
     }
 
@@ -103,13 +103,8 @@ export default function MonkeyPayoutChart({
       const c = i + 1
       const values: Array<number | null> = []
       for (const g of actualSteps) {
-        if (!isValidMonkeyGames(c, g, displayGames)) {
-          values.push(null)
-          continue
-        }
         const r = calculateMonkey({
           actualGames: g,
-          displayGames,
           cycle: c,
           mode,
           shortened,
@@ -124,7 +119,7 @@ export default function MonkeyPayoutChart({
         emphasize: c === cycle,
       }
     })
-  }, [view, actualSteps, displayGames, cycle, mode, shortened, maxCycle])
+  }, [view, actualSteps, cycle, mode, shortened, maxCycle])
 
   const W = 640
   const H = 280
@@ -153,14 +148,15 @@ export default function MonkeyPayoutChart({
             value={view}
             onChange={(e) => setView(e.target.value as ChartView)}
           >
-            <option value="cycles">周期比較（表示G固定）</option>
+            <option value="cycles">周期比較</option>
             <option value="table">補正後 vs 表（現在周期）</option>
           </select>
         </label>
       </div>
       <p className="inline-note">
-        横軸=実G / 縦軸=期待出玉率%。表示G={displayGames}
-        {view === 'cycles' ? '固定で周期別' : `・現在${cycle}周期`}。1周期目は表示G≥実Gのみ。閉店補正なし。
+        横軸=実G / 縦軸=期待出玉率%。
+        {view === 'cycles' ? '周期別' : `現在${cycle}周期`}
+        。閉店補正なし。
       </p>
       <div className="monkey-chart-frame">
         <svg
@@ -183,7 +179,7 @@ export default function MonkeyPayoutChart({
                 textAnchor="end"
                 className="monkey-chart-label"
               >
-                {t}%
+                {t}
               </text>
             </g>
           ))}
@@ -193,33 +189,23 @@ export default function MonkeyPayoutChart({
               x={xAt(g)}
               y={H - 10}
               textAnchor="middle"
-              className="monkey-chart-label"
+              className="monkey-chart-axis"
             >
               {g}
             </text>
           ))}
-          <text
-            x={pad.left + innerW / 2}
-            y={H - 0}
-            textAnchor="middle"
-            className="monkey-chart-axis"
-          >
-            実G
-          </text>
-
           {series.map((s) =>
-            polylinePoints(actualSteps, s.values, xAt, yAt).map((pts, si) => (
+            polylinePoints(actualSteps, s.values, xAt, yAt).map((pts, i) => (
               <polyline
-                key={`${s.id}-${si}`}
-                fill="none"
+                key={`${s.id}-${i}`}
                 points={pts}
+                fill="none"
                 stroke={s.color}
                 strokeWidth={'emphasize' in s && s.emphasize ? 2.5 : 1.5}
-                opacity={'emphasize' in s && s.emphasize === false ? 0.55 : 0.95}
+                opacity={'emphasize' in s && s.emphasize === false ? 0.45 : 1}
               />
             )),
           )}
-
           <line
             x1={markerX}
             x2={markerX}
@@ -237,12 +223,11 @@ export default function MonkeyPayoutChart({
               style={{ background: s.color }}
             />
             {s.label}
-            {'emphasize' in s && s.emphasize ? '（現在）' : ''}
           </li>
         ))}
         <li>
           <span className="monkey-chart-swatch monkey-chart-swatch-now" />
-          現在の実G（{actualGames}）
+          現在実G
         </li>
       </ul>
     </div>
