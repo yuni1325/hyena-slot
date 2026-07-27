@@ -1,13 +1,18 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import SessionMachineFields from '../components/SessionMachineFields'
-import { formatRate, rateTone } from '../lib/format'
+import { formatNum, formatRate, rateTone } from '../lib/format'
 import {
   getSessionMachine,
   sessionMachines,
 } from '../sessions/registry'
 import { useSessions } from '../sessions/SessionProvider'
-import { actualPayoutRate, type MachineSession } from '../sessions/types'
+import {
+  actualPayoutRate,
+  diffMedalsFrom,
+  recoverMedalsFrom,
+  type MachineSession,
+} from '../sessions/types'
 
 function isValidDateKey(s: string | undefined): s is string {
   return Boolean(s && /^\d{4}-\d{2}-\d{2}$/.test(s))
@@ -44,9 +49,12 @@ export default function LogsSessionFormPage() {
   const [investText, setInvestText] = useState(
     () => String(existing?.investMedals ?? ''),
   )
-  const [diffText, setDiffText] = useState(
-    () => String(existing?.diffMedals ?? ''),
-  )
+  const [recoverText, setRecoverText] = useState(() => {
+    if (!existing) return ''
+    return String(
+      recoverMedalsFrom(existing.investMedals, existing.diffMedals),
+    )
+  })
   const [note, setNote] = useState(() => existing?.note ?? '')
   const [error, setError] = useState<string | null>(null)
 
@@ -70,9 +78,15 @@ export default function LogsSessionFormPage() {
 
   const expected = machine ? machine.expectedPayoutRate(inputs) : null
   const investMedals = Number(investText)
-  const diffMedals = Number(diffText)
+  const recoverMedals = Number(recoverText)
+  const investOk = Number.isFinite(investMedals) && investMedals > 0
+  const recoverOk = Number.isFinite(recoverMedals) && recoverMedals >= 0
+  const diffMedals =
+    investOk && recoverOk
+      ? diffMedalsFrom(investMedals, recoverMedals)
+      : null
   const actual =
-    Number.isFinite(investMedals) && Number.isFinite(diffMedals)
+    investOk && diffMedals != null
       ? actualPayoutRate(investMedals, diffMedals)
       : null
   const delta =
@@ -90,12 +104,16 @@ export default function LogsSessionFormPage() {
       setError('機種を選んでください')
       return
     }
-    if (!(investMedals > 0) || !Number.isFinite(investMedals)) {
+    if (!investOk) {
       setError('投資枚数は1以上の数値で入力してください')
       return
     }
-    if (!Number.isFinite(diffMedals)) {
-      setError('差枚を数値で入力してください')
+    if (!recoverOk) {
+      setError('回収枚数は0以上の数値で入力してください')
+      return
+    }
+    if (diffMedals == null) {
+      setError('差枚を計算できません')
       return
     }
 
@@ -177,15 +195,24 @@ export default function LogsSessionFormPage() {
             />
           </label>
           <label className="field">
-            <span>差枚（マイナス可）</span>
+            <span>回収枚数</span>
             <input
               type="number"
               inputMode="numeric"
-              value={diffText}
-              onChange={(e) => setDiffText(e.target.value)}
-              placeholder="例: -800 / 1200"
+              min={0}
+              value={recoverText}
+              onChange={(e) => setRecoverText(e.target.value)}
+              placeholder="例: 6200"
             />
           </label>
+          <div className="field field-full session-diff-display">
+            <span className="label">差枚（回収 − 投資）</span>
+            <strong>
+              {diffMedals == null
+                ? '—'
+                : `${diffMedals > 0 ? '+' : ''}${formatNum(diffMedals, 0)}`}
+            </strong>
+          </div>
           <label className="field field-full">
             <span>メモ（任意）</span>
             <input
@@ -200,11 +227,15 @@ export default function LogsSessionFormPage() {
         <div className="session-compare">
           <div>
             <span className="label">期待</span>
-            <strong className={`rate ${rateTone(expected)}`}>{formatRate(expected)}</strong>
+            <strong className={`rate ${rateTone(expected)}`}>
+              {formatRate(expected)}
+            </strong>
           </div>
           <div>
             <span className="label">実績</span>
-            <strong className={`rate ${rateTone(actual)}`}>{formatRate(actual)}</strong>
+            <strong className={`rate ${rateTone(actual)}`}>
+              {formatRate(actual)}
+            </strong>
           </div>
           <div>
             <span className="label">差</span>

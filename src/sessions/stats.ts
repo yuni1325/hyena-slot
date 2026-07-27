@@ -14,6 +14,11 @@ export type AggregateStats = {
   weightedActualRate: number | null
 }
 
+export type MachineAggregate = AggregateStats & {
+  machineId: string
+  machineName: string
+}
+
 /** 獲得枚数 = 投資 + 差枚。投資を上回る ⇔ 差枚 > 0 */
 export function isSessionWin(s: MachineSession): boolean {
   return s.investMedals + s.diffMedals > s.investMedals
@@ -77,4 +82,31 @@ export function dayDeltaPp(sessions: MachineSession[]): number | null {
     return null
   }
   return agg.weightedActualRate - agg.weightedExpectedRate
+}
+
+/** 機種ごとの稼働台数・勝率・差枚など。台数が多い順。 */
+export function aggregateByMachine(
+  sessions: MachineSession[],
+): MachineAggregate[] {
+  const byId = new Map<string, MachineSession[]>()
+  for (const s of sessions) {
+    const list = byId.get(s.machineId)
+    if (list) list.push(s)
+    else byId.set(s.machineId, [s])
+  }
+
+  const rows: MachineAggregate[] = []
+  for (const [machineId, list] of byId) {
+    const agg = aggregateSessions(list)
+    rows.push({
+      machineId,
+      machineName: list[0]?.machineName ?? machineId,
+      ...agg,
+    })
+  }
+
+  return rows.sort((a, b) => {
+    if (b.count !== a.count) return b.count - a.count
+    return a.machineName.localeCompare(b.machineName, 'ja')
+  })
 }

@@ -694,6 +694,74 @@ body {
   color: var(--muted);
 }
 
+.session-machine-stats {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed var(--line);
+}
+
+.session-machine-stats-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+.session-machine-stats-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.session-machine-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.7rem;
+  align-items: baseline;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+
+.session-machine-stat-name {
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-machine-stat-row .is-good {
+  color: var(--good);
+  font-weight: 700;
+}
+
+.session-machine-stat-row .is-bad {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.session-diff-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 254, 249, 0.7);
+}
+
+.session-diff-display .label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.session-diff-display strong {
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .rate.hot {
   color: var(--hot);
 }

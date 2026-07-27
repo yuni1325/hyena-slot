@@ -7,6 +7,7 @@ import SessionStatsBar, {
 import { useSessions } from '../sessions/SessionProvider'
 import { formatNum } from '../lib/format'
 import {
+  aggregateByMachine,
   aggregateSessions,
   sessionsInMonth,
   sessionsOnDate,
@@ -44,6 +45,10 @@ export default function LogsCalendarPage() {
   )
   const monthStats = useMemo(
     () => aggregateSessions(monthSessions),
+    [monthSessions],
+  )
+  const monthByMachine = useMemo(
+    () => aggregateByMachine(monthSessions),
     [monthSessions],
   )
 
@@ -124,7 +129,11 @@ export default function LogsCalendarPage() {
       </header>
 
       <main className="panel session-panel">
-        <SessionStatsBar title={`${year}年${month}月の集計`} stats={monthStats} />
+        <SessionStatsBar
+          title={`${year}年${month}月の集計`}
+          stats={monthStats}
+          byMachine={monthByMachine}
+        />
 
         <div className="cal-nav">
           <button type="button" className="btn-secondary" onClick={() => shiftMonth(-1)}>

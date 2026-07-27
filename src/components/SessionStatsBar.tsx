@@ -1,13 +1,24 @@
 import { Link } from 'react-router-dom'
 import { formatNum, formatRate, rateTone } from '../lib/format'
-import type { AggregateStats } from '../sessions/stats'
+import { getSessionMachine } from '../sessions/registry'
+import type { AggregateStats, MachineAggregate } from '../sessions/stats'
+
+function formatDiff(n: number): string {
+  return `${n > 0 ? '+' : ''}${formatNum(n, 0)}`
+}
 
 type Props = {
   title?: string
   stats: AggregateStats
+  /** 機種ごとの稼働台数・勝率・差枚 */
+  byMachine?: MachineAggregate[]
 }
 
-export default function SessionStatsBar({ title = '集計', stats }: Props) {
+export default function SessionStatsBar({
+  title = '集計',
+  stats,
+  byMachine,
+}: Props) {
   return (
     <section className="session-stats" aria-label={title}>
       <h2 className="session-stats-title">{title}</h2>
@@ -37,14 +48,65 @@ export default function SessionStatsBar({ title = '集計', stats }: Props) {
           <strong>{stats.count}</strong>
         </div>
         <div className="session-stat">
-          <span className="label">総投資／総差枚</span>
+          <span className="label">総投資／回収／差枚</span>
           <strong>
             {formatNum(stats.totalInvest, 0)}／
-            {stats.totalDiff > 0 ? '+' : ''}
-            {formatNum(stats.totalDiff, 0)}
+            {formatNum(stats.totalInvest + stats.totalDiff, 0)}／
+            {formatDiff(stats.totalDiff)}
           </strong>
         </div>
       </div>
+
+      {byMachine && byMachine.length > 0 && (
+        <div className="session-machine-stats">
+          <h3 className="session-machine-stats-title">機種別</h3>
+          <ul className="session-machine-stats-list">
+            {byMachine.map((m) => {
+              const short =
+                getSessionMachine(m.machineId)?.shortName ?? m.machineName
+              return (
+                <li key={m.machineId} className="session-machine-stat-row">
+                  <span className="session-machine-stat-name">{short}</span>
+                  <span>{m.count}台</span>
+                  <span>
+                    勝率{' '}
+                    {m.winRate == null ? '—' : `${m.winRate.toFixed(0)}%`}
+                  </span>
+                  <span>
+                    期待{' '}
+                    <strong className={`rate ${rateTone(m.weightedExpectedRate)}`}>
+                      {formatRate(m.weightedExpectedRate)}
+                    </strong>
+                  </span>
+                  <span>
+                    実績{' '}
+                    <strong className={`rate ${rateTone(m.weightedActualRate)}`}>
+                      {formatRate(m.weightedActualRate)}
+                    </strong>
+                  </span>
+                  <span>
+                    投資 {formatNum(m.totalInvest, 0)}
+                  </span>
+                  <span>
+                    回収 {formatNum(m.totalInvest + m.totalDiff, 0)}
+                  </span>
+                  <span
+                    className={
+                      m.totalDiff > 0
+                        ? 'is-good'
+                        : m.totalDiff < 0
+                          ? 'is-bad'
+                          : ''
+                    }
+                  >
+                    差枚 {formatDiff(m.totalDiff)}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
     </section>
   )
 }

@@ -2,8 +2,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import SessionStatsBar from '../components/SessionStatsBar'
 import { formatNum, formatRate, rateTone } from '../lib/format'
 import { useSessions } from '../sessions/SessionProvider'
-import { aggregateSessions, sessionsOnDate } from '../sessions/stats'
-import { actualPayoutRate } from '../sessions/types'
+import { aggregateByMachine, aggregateSessions, sessionsOnDate } from '../sessions/stats'
+import { actualPayoutRate, recoverMedalsFrom } from '../sessions/types'
 import { getSessionMachine } from '../sessions/registry'
 
 function isValidDateKey(s: string | undefined): s is string {
@@ -26,6 +26,7 @@ export default function LogsDayPage() {
 
   const daySessions = sessionsOnDate(sessions, date)
   const stats = aggregateSessions(daySessions)
+  const byMachine = aggregateByMachine(daySessions)
 
   return (
     <div className="app">
@@ -41,7 +42,7 @@ export default function LogsDayPage() {
       </header>
 
       <main className="panel session-panel">
-        <SessionStatsBar title="当日集計" stats={stats} />
+        <SessionStatsBar title="当日集計" stats={stats} byMachine={byMachine} />
 
         <div className="session-actions">
           <Link className="btn-primary" to={`/logs/${date}/new`}>
@@ -66,8 +67,12 @@ export default function LogsDayPage() {
                   <Link to={`/logs/${date}/${s.id}`} className="session-card-main">
                     <span className="session-card-name">{short}</span>
                     <span className="session-card-row">
-                      投資 {formatNum(s.investMedals, 0)}／差枚{' '}
-                      {s.diffMedals > 0 ? '+' : ''}
+                      投資 {formatNum(s.investMedals, 0)}／回収{' '}
+                      {formatNum(
+                        recoverMedalsFrom(s.investMedals, s.diffMedals),
+                        0,
+                      )}
+                      ／差枚 {s.diffMedals > 0 ? '+' : ''}
                       {formatNum(s.diffMedals, 0)}
                     </span>
                     <span className="session-card-rates">
