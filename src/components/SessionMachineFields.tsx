@@ -1,9 +1,44 @@
+import { useEffect, useState } from 'react'
+import IntTextInput, { parseIntText } from './IntTextInput'
 import type { FieldDef } from '../sessions/registry'
 
 type Props = {
   fields: FieldDef[]
   values: Record<string, unknown>
   onChange: (next: Record<string, unknown>) => void
+}
+
+function NumberField({
+  field,
+  value,
+  onCommit,
+}: {
+  field: Extract<FieldDef, { type: 'number' }>
+  value: unknown
+  onCommit: (n: number) => void
+}) {
+  const num =
+    typeof value === 'number' && Number.isFinite(value) ? Math.trunc(value) : 0
+  const [text, setText] = useState(() => (num === 0 ? '' : String(num)))
+
+  useEffect(() => {
+    setText(num === 0 ? '' : String(num))
+  }, [num])
+
+  return (
+    <label className="field">
+      <span>{field.label}</span>
+      <IntTextInput
+        min={field.min}
+        max={field.max}
+        value={text}
+        onChange={(t) => {
+          setText(t)
+          onCommit(parseIntText(t, 0))
+        }}
+      />
+    </label>
+  )
 }
 
 export default function SessionMachineFields({
@@ -47,23 +82,13 @@ export default function SessionMachineFields({
             </label>
           )
         }
-        const n = values[f.key]
         return (
-          <label key={f.key} className="field">
-            <span>{f.label}</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={f.min}
-              max={f.max}
-              step={f.step ?? 1}
-              value={typeof n === 'number' ? n : Number(n) || 0}
-              onChange={(e) => {
-                const v = Number(e.target.value)
-                set(f.key, Number.isFinite(v) ? v : 0)
-              }}
-            />
-          </label>
+          <NumberField
+            key={f.key}
+            field={f}
+            value={values[f.key]}
+            onCommit={(n) => set(f.key, n)}
+          />
         )
       })}
     </div>

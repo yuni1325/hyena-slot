@@ -34,10 +34,22 @@ export function formatMinutes(v: number | null): string {
   return m === 0 ? `${h}時間` : `${h}時間${m}分`
 }
 
+/**
+ * 出玉率の色: 100%超＝緑（pos）、未満＝赤（neg）
+ */
 export function rateTone(rate: number | null): string {
   if (rate === null) return 'muted'
-  if (rate >= 110) return 'hot'
-  if (rate >= 100) return 'good'
-  if (rate >= 95) return 'fair'
-  return 'cold'
+  if (rate > 100) return 'pos'
+  if (rate < 100) return 'neg'
+  return 'zero'
+}
+
+/**
+ * 符号付き数値（差枚・pp差など）: プラス＝緑、マイナス＝赤
+ */
+export function signedTone(n: number | null): string {
+  if (n === null || !Number.isFinite(n)) return 'muted'
+  if (n > 0) return 'pos'
+  if (n < 0) return 'neg'
+  return 'zero'
 }

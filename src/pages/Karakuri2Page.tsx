@@ -52,8 +52,8 @@ function primaryPathLabel(
 
 export default function Karakuri2Page() {
   const [actualText, setActualText] = useState('314')
-  const [displayText, setDisplayText] = useState('0')
-  const [throughText, setThroughText] = useState('0')
+  const [displayText, setDisplayText] = useState('')
+  const [throughText, setThroughText] = useState('')
   const [situation, setSituation] = useState<Situation>('normal')
   const [mode, setMode] = useState<ModeId>('A')
   const [closingHours, setClosingHours] = useState<ClosingHours>(
@@ -125,13 +125,13 @@ export default function Karakuri2Page() {
         <label className="field">
           <span>現在の実G数</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={2500}
             value={actualText}
-            onChange={(e) => setActualText(e.target.value)}
-            onBlur={() => setActualText(String(actualGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setActualText(v) }}
+            onBlur={() => setActualText(actualGames === 0 ? '' : String(actualGames))}
           />
         </label>
         <p className="inline-note">
@@ -142,13 +142,13 @@ export default function Karakuri2Page() {
         <label className="field">
           <span>現在の表示G数（液晶）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1200}
             value={displayText}
-            onChange={(e) => setDisplayText(e.target.value)}
-            onBlur={() => setDisplayText(String(displayGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setDisplayText(v) }}
+            onBlur={() => setDisplayText(displayGames === 0 ? '' : String(displayGames))}
           />
         </label>
         <p className="inline-note">
@@ -190,13 +190,13 @@ export default function Karakuri2Page() {
         <label className="field">
           <span>CZスルー回数（女神）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={4}
             value={throughText}
-            onChange={(e) => setThroughText(e.target.value)}
-            onBlur={() => setThroughText(String(throughCount))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setThroughText(v) }}
+            onBlur={() => setThroughText(throughCount === 0 ? '' : String(throughCount))}
           />
         </label>
         <p className="inline-note">

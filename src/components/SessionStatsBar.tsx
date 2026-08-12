@@ -1,5 +1,10 @@
 import { Link } from 'react-router-dom'
-import { formatNum, formatRate, rateTone } from '../lib/format'
+import {
+  formatNum,
+  formatRate,
+  rateTone,
+  signedTone,
+} from '../lib/format'
 import { getSessionMachine } from '../sessions/registry'
 import type { AggregateStats, MachineAggregate } from '../sessions/stats'
 
@@ -52,7 +57,9 @@ export default function SessionStatsBar({
           <strong>
             {formatNum(stats.totalInvest, 0)}／
             {formatNum(stats.totalInvest + stats.totalDiff, 0)}／
-            {formatDiff(stats.totalDiff)}
+            <span className={signedTone(stats.totalDiff)}>
+              {formatDiff(stats.totalDiff)}
+            </span>
           </strong>
         </div>
       </div>
@@ -60,51 +67,58 @@ export default function SessionStatsBar({
       {byMachine && byMachine.length > 0 && (
         <div className="session-machine-stats">
           <h3 className="session-machine-stats-title">機種別</h3>
-          <ul className="session-machine-stats-list">
-            {byMachine.map((m) => {
-              const short =
-                getSessionMachine(m.machineId)?.shortName ?? m.machineName
-              return (
-                <li key={m.machineId} className="session-machine-stat-row">
-                  <span className="session-machine-stat-name">{short}</span>
-                  <span>{m.count}台</span>
-                  <span>
-                    勝率{' '}
-                    {m.winRate == null ? '—' : `${m.winRate.toFixed(0)}%`}
-                  </span>
-                  <span>
-                    期待{' '}
-                    <strong className={`rate ${rateTone(m.weightedExpectedRate)}`}>
-                      {formatRate(m.weightedExpectedRate)}
-                    </strong>
-                  </span>
-                  <span>
-                    実績{' '}
-                    <strong className={`rate ${rateTone(m.weightedActualRate)}`}>
-                      {formatRate(m.weightedActualRate)}
-                    </strong>
-                  </span>
-                  <span>
-                    投資 {formatNum(m.totalInvest, 0)}
-                  </span>
-                  <span>
-                    回収 {formatNum(m.totalInvest + m.totalDiff, 0)}
-                  </span>
-                  <span
-                    className={
-                      m.totalDiff > 0
-                        ? 'is-good'
-                        : m.totalDiff < 0
-                          ? 'is-bad'
-                          : ''
-                    }
-                  >
-                    差枚 {formatDiff(m.totalDiff)}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
+          <div className="session-machine-table-wrap">
+            <table className="session-machine-table">
+              <thead>
+                <tr>
+                  <th scope="col">機種</th>
+                  <th scope="col">台数</th>
+                  <th scope="col">勝率</th>
+                  <th scope="col">期待</th>
+                  <th scope="col">実績</th>
+                  <th scope="col">投資</th>
+                  <th scope="col">回収</th>
+                  <th scope="col">差枚</th>
+                </tr>
+              </thead>
+              <tbody>
+                {byMachine.map((m) => {
+                  const short =
+                    getSessionMachine(m.machineId)?.shortName ?? m.machineName
+                  return (
+                    <tr key={m.machineId}>
+                      <th scope="row" className="session-machine-table-name">
+                        {short}
+                      </th>
+                      <td>{m.count}</td>
+                      <td>
+                        {m.winRate == null ? '—' : `${m.winRate.toFixed(0)}%`}
+                      </td>
+                      <td>
+                        <strong
+                          className={`rate ${rateTone(m.weightedExpectedRate)}`}
+                        >
+                          {formatRate(m.weightedExpectedRate)}
+                        </strong>
+                      </td>
+                      <td>
+                        <strong
+                          className={`rate ${rateTone(m.weightedActualRate)}`}
+                        >
+                          {formatRate(m.weightedActualRate)}
+                        </strong>
+                      </td>
+                      <td>{formatNum(m.totalInvest, 0)}</td>
+                      <td>{formatNum(m.totalInvest + m.totalDiff, 0)}</td>
+                      <td className={signedTone(m.totalDiff)}>
+                        {formatDiff(m.totalDiff)}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </section>

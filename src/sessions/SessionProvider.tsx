@@ -12,6 +12,7 @@ import {
   parseSessionsFile,
   saveSessionsFile,
 } from './storage'
+import { resolveExpectedPayoutRate } from './stats'
 import type { MachineSession, SessionsFile } from './types'
 
 type SessionsContextValue = {
@@ -26,8 +27,39 @@ type SessionsContextValue = {
 
 const SessionsContext = createContext<SessionsContextValue | null>(null)
 
+/** 保存済み入力から現行式の期待出玉率へ寄せる（表示・エクスポート用） */
+function refreshExpectedRates(file: SessionsFile): SessionsFile {
+  let changed = false
+  const sessions = file.sessions.map((s) => {
+    const live = resolveExpectedPayoutRate(s)
+    if (live === s.expectedPayoutRate) return s
+    if (
+      live == null &&
+      (s.expectedPayoutRate == null || !Number.isFinite(s.expectedPayoutRate))
+    ) {
+      return s
+    }
+    // 浮動小数の微小差は無視
+    if (
+      live != null &&
+      s.expectedPayoutRate != null &&
+      Math.abs(live - s.expectedPayoutRate) < 1e-6
+    ) {
+      return s
+    }
+    changed = true
+    return { ...s, expectedPayoutRate: live }
+  })
+  return changed ? { ...file, sessions } : file
+}
+
 export function SessionsProvider({ children }: { children: ReactNode }) {
-  const [file, setFile] = useState<SessionsFile>(() => loadSessionsFile())
+  const [file, setFile] = useState<SessionsFile>(() => {
+    const loaded = loadSessionsFile()
+    const refreshed = refreshExpectedRates(loaded)
+    if (refreshed !== loaded) saveSessionsFile(refreshed)
+    return refreshed
+  })
 
   const persist = useCallback((next: SessionsFile) => {
     saveSessionsFile(next)

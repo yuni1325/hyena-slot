@@ -45,6 +45,22 @@ export const MODE_CEILING: Record<Phase, Record<HokutoMode, number>> = {
 export const SHUTTER_CAP = 896
 
 /**
+ * シャッター判別完了までの体感あべし分布（ユーザー実績）
+ * 判別完了まで引っ張られるあべしと割合。
+ */
+export const SHUTTER_DISC_DIST: ReadonlyArray<{ abeshi: number; weight: number }> =
+  [
+    { abeshi: 45, weight: 0.2 },
+    { abeshi: 175, weight: 0.3 },
+    { abeshi: 300, weight: 0.3 },
+    { abeshi: 420, weight: 0.2 },
+  ]
+
+/** 判別完了までの平均あべし（参考表示用） */
+export const SHUTTER_DISC_AVG_ABESHI =
+  SHUTTER_DISC_DIST.reduce((s, d) => s + d.abeshi * d.weight, 0)
+
+/**
  * モード滞在率（設定1・公開値）
  * 出典: web情報「状況別のモード振り分け」
  */

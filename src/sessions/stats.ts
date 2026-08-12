@@ -1,3 +1,4 @@
+import { getSessionMachine } from './registry'
 import { actualPayoutRate, type MachineSession } from './types'
 
 export type AggregateStats = {
@@ -19,6 +20,27 @@ export type MachineAggregate = AggregateStats & {
   machineName: string
 }
 
+/**
+ * 保存入力から現行の計算式で期待出玉率を再算出。
+ * 失敗時は保存スナップショットにフォールバック。
+ */
+export function resolveExpectedPayoutRate(
+  s: MachineSession,
+): number | null {
+  const def = getSessionMachine(s.machineId)
+  if (def) {
+    try {
+      const live = def.expectedPayoutRate(s.inputs ?? {})
+      if (live != null && Number.isFinite(live)) return live
+    } catch {
+      // fall through
+    }
+  }
+  return s.expectedPayoutRate != null && Number.isFinite(s.expectedPayoutRate)
+    ? s.expectedPayoutRate
+    : null
+}
+
 /** 獲得枚数 = 投資 + 差枚。投資を上回る ⇔ 差枚 > 0 */
 export function isSessionWin(s: MachineSession): boolean {
   return s.investMedals + s.diffMedals > s.investMedals
@@ -36,9 +58,10 @@ export function aggregateSessions(sessions: MachineSession[]): AggregateStats {
     totalDiff += s.diffMedals
     if (!(s.investMedals > 0)) continue
     totalInvest += s.investMedals
-    if (s.expectedPayoutRate != null && Number.isFinite(s.expectedPayoutRate)) {
+    const expected = resolveExpectedPayoutRate(s)
+    if (expected != null) {
       expectedWeight += s.investMedals
-      expectedSum += s.expectedPayoutRate * s.investMedals
+      expectedSum += expected * s.investMedals
     }
   }
 
@@ -64,6 +87,14 @@ export function sessionsInMonth(
   month: number,
 ): MachineSession[] {
   const prefix = `${year}-${String(month).padStart(2, '0')}`
+  return sessions.filter((s) => s.date.startsWith(prefix))
+}
+
+export function sessionsInYear(
+  sessions: MachineSession[],
+  year: number,
+): MachineSession[] {
+  const prefix = `${year}-`
   return sessions.filter((s) => s.date.startsWith(prefix))
 }
 

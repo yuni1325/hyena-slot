@@ -68,13 +68,13 @@ export default function BakemonogatariPage() {
         <label className="field">
           <span>実G数（AT後）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1100}
             value={actualText}
-            onChange={(e) => setActualText(e.target.value)}
-            onBlur={() => setActualText(String(actualGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setActualText(v) }}
+            onBlur={() => setActualText(actualGames === 0 ? '' : String(actualGames))}
           />
         </label>
         <p className="inline-note">

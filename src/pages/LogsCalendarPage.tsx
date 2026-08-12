@@ -10,6 +10,7 @@ import {
   aggregateByMachine,
   aggregateSessions,
   sessionsInMonth,
+  sessionsInYear,
   sessionsOnDate,
 } from '../sessions/stats'
 
@@ -50,6 +51,19 @@ export default function LogsCalendarPage() {
   const monthByMachine = useMemo(
     () => aggregateByMachine(monthSessions),
     [monthSessions],
+  )
+
+  const yearSessions = useMemo(
+    () => sessionsInYear(sessions, year),
+    [sessions, year],
+  )
+  const yearStats = useMemo(
+    () => aggregateSessions(yearSessions),
+    [yearSessions],
+  )
+  const yearByMachine = useMemo(
+    () => aggregateByMachine(yearSessions),
+    [yearSessions],
   )
 
   const firstDow = useMemo(() => {
@@ -115,26 +129,14 @@ export default function LogsCalendarPage() {
   }
 
   return (
-    <div className="app">
+    <div className="app logs-calendar-app">
       <div className="bg-grid" aria-hidden />
-      <header className="hero">
+      <header className="logs-cal-header">
         <BackToHomeButton />
-        <p className="brand">
-          <Link to="/" className="brand-link">
-            HYENA SLOT
-          </Link>
-        </p>
-        <h1 className="machine-name">稼働記録</h1>
-        <p className="tagline">カレンダーから日付を選び、台ごとの実績を記録</p>
+        <h1 className="logs-cal-title">稼働記録</h1>
       </header>
 
       <main className="panel session-panel">
-        <SessionStatsBar
-          title={`${year}年${month}月の集計`}
-          stats={monthStats}
-          byMachine={monthByMachine}
-        />
-
         <div className="cal-nav">
           <button type="button" className="btn-secondary" onClick={() => shiftMonth(-1)}>
             ← 前月
@@ -167,7 +169,9 @@ export default function LogsCalendarPage() {
                 {c.count > 0 && c.totalDiff != null && (
                   <>
                     <span className="cal-meta">{c.count}台</span>
-                    <span className="cal-delta">{formatDiff(c.totalDiff)}</span>
+                    <span className={`cal-delta ${dayTone(c.totalDiff)}`}>
+                      {formatDiff(c.totalDiff)}
+                    </span>
                   </>
                 )}
               </Link>
@@ -175,9 +179,17 @@ export default function LogsCalendarPage() {
           )}
         </div>
 
-        <p className="hint">
-          各日は稼働台数と合計差枚。色は合計差枚（緑＝プラス／赤＝マイナス）。
-        </p>
+        <SessionStatsBar
+          title={`${year}年${month}月の集計`}
+          stats={monthStats}
+          byMachine={monthByMachine}
+        />
+
+        <SessionStatsBar
+          title={`${year}年の集計`}
+          stats={yearStats}
+          byMachine={yearByMachine}
+        />
 
         <SessionBackupActions onExport={exportJson} onImportFile={handleImport} />
         <p className="hint">

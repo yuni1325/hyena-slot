@@ -229,6 +229,18 @@ body {
   width: 100%;
 }
 
+.field input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.field input[type='number']::-webkit-outer-spin-button,
+.field input[type='number']::-webkit-inner-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .abeshi-field input {
   font-size: 2rem;
   letter-spacing: 0.04em;
@@ -298,32 +310,33 @@ body {
   color: var(--accent-deep);
 }
 
-.tone-hot {
-  border-left-color: var(--hot);
-}
-.tone-hot .rate {
-  color: var(--hot);
-}
-
-.tone-good {
+.tone-hot,
+.tone-good,
+.tone-pos {
   border-left-color: var(--good);
 }
-.tone-good .rate {
+.tone-hot .rate,
+.tone-good .rate,
+.tone-pos .rate {
   color: var(--good);
 }
 
-.tone-fair {
-  border-left-color: var(--fair);
+.tone-fair,
+.tone-cold,
+.tone-neg {
+  border-left-color: var(--accent);
 }
-.tone-fair .rate {
-  color: var(--fair);
+.tone-fair .rate,
+.tone-cold .rate,
+.tone-neg .rate {
+  color: var(--accent);
 }
 
-.tone-cold {
-  border-left-color: var(--cold);
+.tone-zero {
+  border-left-color: var(--line);
 }
-.tone-cold .rate {
-  color: var(--cold);
+.tone-zero .rate {
+  color: var(--ink-soft);
 }
 
 .tone-muted {
@@ -678,17 +691,24 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.session-stat .rate.hot {
-  color: var(--hot);
-}
-.session-stat .rate.good {
+.session-stat .rate.hot,
+.session-stat .rate.good,
+.session-stat .rate.pos,
+.session-stat .pos,
+.session-stat strong.pos {
   color: var(--good);
 }
-.session-stat .rate.fair {
-  color: var(--fair);
+.session-stat .rate.fair,
+.session-stat .rate.cold,
+.session-stat .rate.neg,
+.session-stat .neg,
+.session-stat strong.neg {
+  color: var(--accent);
 }
-.session-stat .rate.cold {
-  color: var(--cold);
+.session-stat .rate.zero,
+.session-stat .zero,
+.session-stat strong.zero {
+  color: var(--ink-soft);
 }
 .session-stat .rate.muted {
   color: var(--muted);
@@ -705,41 +725,94 @@ body {
   font-size: 0.85rem;
 }
 
-.session-machine-stats-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+.session-machine-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -0.15rem;
+  padding-bottom: 0.15rem;
 }
 
-.session-machine-stat-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.7rem;
-  align-items: baseline;
+.session-machine-table {
+  width: 100%;
+  min-width: 36rem;
+  border-collapse: collapse;
   font-size: 0.78rem;
   font-variant-numeric: tabular-nums;
-  color: var(--ink-soft);
+  line-height: 1.35;
 }
 
-.session-machine-stat-name {
+.session-machine-table th,
+.session-machine-table td {
+  padding: 0.45rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  vertical-align: middle;
+}
+
+.session-machine-table thead th {
+  font-size: 0.7rem;
   font-weight: 700;
+  color: var(--ink-soft);
+  border-bottom: 2px solid var(--ink);
+  background: rgba(255, 254, 249, 0.95);
+}
+
+.session-machine-table th:first-child,
+.session-machine-table td:first-child,
+.session-machine-table-name {
+  text-align: left;
+}
+
+.session-machine-table-name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  font-weight: 800;
   color: var(--ink);
+  background: #fffef9;
+  max-width: 7.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  padding-right: 0.55rem;
+  border-right: 1px solid var(--line);
 }
 
-.session-machine-stat-row .is-good {
+.session-machine-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: rgba(255, 254, 249, 0.98);
+  border-right: 1px solid var(--line);
+}
+
+.session-machine-table tbody tr:last-child th,
+.session-machine-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.session-machine-table .rate {
+  font-weight: 700;
+}
+
+.session-machine-table .rate.pos,
+.session-machine-table .pos,
+.session-machine-table .is-good {
   color: var(--good);
   font-weight: 700;
 }
 
-.session-machine-stat-row .is-bad {
+.session-machine-table .rate.neg,
+.session-machine-table .neg,
+.session-machine-table .is-bad {
   color: var(--accent);
   font-weight: 700;
+}
+
+.session-machine-table .rate.zero,
+.session-machine-table .zero {
+  color: var(--ink-soft);
 }
 
 .session-diff-display {
@@ -762,20 +835,47 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.rate.hot {
-  color: var(--hot);
-}
-.rate.good {
+.rate.hot,
+.rate.good,
+.rate.pos,
+.pos {
   color: var(--good);
 }
-.rate.fair {
-  color: var(--fair);
+.rate.fair,
+.rate.cold,
+.rate.neg,
+.neg {
+  color: var(--accent);
 }
-.rate.cold {
-  color: var(--cold);
+.rate.zero,
+.zero {
+  color: var(--ink-soft);
 }
 .rate.muted {
   color: var(--muted);
+}
+
+.logs-calendar-app {
+  padding-top: 0.85rem;
+}
+
+.logs-cal-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.logs-cal-header .back-home-wrap {
+  margin: 0;
+}
+
+.logs-cal-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 .cal-nav {
@@ -805,6 +905,10 @@ body {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.3rem;
+}
+
+.cal-grid + .session-stats {
+  margin-top: 1.25rem;
 }
 
 .cal-cell {
@@ -854,10 +958,26 @@ body {
   background: var(--accent);
 }
 
-.cal-meta,
-.cal-delta {
+.cal-meta {
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
+}
+
+.cal-delta {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.cal-delta.is-good {
+  color: var(--good);
+}
+
+.cal-delta.is-bad {
+  color: var(--accent);
+}
+
+.cal-delta.is-flat {
+  color: var(--ink-soft);
 }
 
 .session-backup,

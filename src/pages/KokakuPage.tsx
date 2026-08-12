@@ -35,7 +35,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 
 export default function KokakuPage() {
   const [atText, setAtText] = useState('219')
-  const [displayText, setDisplayText] = useState('0')
+  const [displayText, setDisplayText] = useState('')
   const [situation, setSituation] = useState<Situation>('normal')
   const [zenMode, setZenMode] = useState<ZenModeId>('A')
   const [closingHours, setClosingHours] = useState<ClosingHours>(
@@ -109,13 +109,13 @@ export default function KokakuPage() {
         <label className="field">
           <span>現在のG数（AT間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1100}
             value={atText}
-            onChange={(e) => setAtText(e.target.value)}
-            onBlur={() => setAtText(String(atGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setAtText(v) }}
+            onBlur={() => setAtText(atGames === 0 ? '' : String(atGames))}
           />
         </label>
         <p className="inline-note">
@@ -125,13 +125,13 @@ export default function KokakuPage() {
         <label className="field">
           <span>表示G数（CZ間・液晶左下）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={600}
             value={displayText}
-            onChange={(e) => setDisplayText(e.target.value)}
-            onBlur={() => setDisplayText(String(displayGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setDisplayText(v) }}
+            onBlur={() => setDisplayText(displayGames === 0 ? '' : String(displayGames))}
           />
         </label>
         <p className="inline-note">

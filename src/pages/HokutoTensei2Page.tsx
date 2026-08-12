@@ -109,8 +109,8 @@ export default function HokutoTensei2Page() {
               value={shutter ? 'on' : 'off'}
               onChange={(e) => setShutter(e.target.value === 'on')}
             >
-              <option value="off">なし</option>
-              <option value="on">あり（896以内混合）</option>
+              <option value="off">なし（通常A確定）</option>
+              <option value="on">あり（896以内＋判別コスト）</option>
             </select>
           </label>
         )}
@@ -118,13 +118,13 @@ export default function HokutoTensei2Page() {
         <label className="field abeshi-field">
           <span>現在のあべし数</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={MAX_ABESHI}
             value={abeshiText}
-            onChange={(e) => setAbeshiText(e.target.value)}
-            onBlur={() => setAbeshiText(String(currentAbeshi))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setAbeshiText(v) }}
+            onBlur={() => setAbeshiText(currentAbeshi === 0 ? '' : String(currentAbeshi))}
           />
         </label>
 

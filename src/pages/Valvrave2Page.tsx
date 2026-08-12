@@ -38,7 +38,7 @@ export default function Valvrave2Page() {
   const [cycleText, setCycleText] = useState('1')
   const [mode, setMode] = useState<PeriodMode>('unknown')
   const [shortened, setShortened] = useState(false)
-  const [kessenText, setKessenText] = useState('0')
+  const [kessenText, setKessenText] = useState('')
   const [closingHours, setClosingHours] = useState<ClosingHours>(
     DEFAULT_CLOSING_HOURS,
   )
@@ -129,13 +129,13 @@ export default function Valvrave2Page() {
         <label className="field">
           <span>実G数（ボーナス&AT間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1600}
             value={actualText}
-            onChange={(e) => setActualText(e.target.value)}
-            onBlur={() => setActualText(String(actualGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setActualText(v) }}
+            onBlur={() => setActualText(actualGames === 0 ? '' : String(actualGames))}
           />
         </label>
         <p className="inline-note">
@@ -147,13 +147,13 @@ export default function Valvrave2Page() {
         <label className="field">
           <span>CZ間G</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1200}
             value={czText}
-            onChange={(e) => setCzText(e.target.value)}
-            onBlur={() => setCzText(String(czGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setCzText(v) }}
+            onBlur={() => setCzText(czGames === 0 ? '' : String(czGames))}
           />
         </label>
         <p className="inline-note">
@@ -179,7 +179,7 @@ export default function Valvrave2Page() {
           <span>現在周期</span>
           <select
             value={String(cycle)}
-            onChange={(e) => setCycleText(e.target.value)}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setCycleText(v) }}
           >
             {cycleOptions.map((c) => (
               <option key={c} value={c}>
@@ -204,7 +204,7 @@ export default function Valvrave2Page() {
           <span>決戦ボーナス連続スルー</span>
           <select
             value={String(kessenThrough)}
-            onChange={(e) => setKessenText(e.target.value)}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setKessenText(v) }}
           >
             {Array.from({ length: PREMISES.kessenThroughMax + 1 }, (_, i) => (
               <option key={i} value={i}>

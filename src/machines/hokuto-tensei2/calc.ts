@@ -6,6 +6,8 @@ import {
   PHASE_LABELS,
   PREMISES,
   SHUTTER_CAP,
+  SHUTTER_DISC_AVG_ABESHI,
+  SHUTTER_DISC_DIST,
   medalsPerGame,
   zoneRepresentative,
   zonesFor,
@@ -87,8 +89,9 @@ export function expectedRemainingAbeshi(
 
 /**
  * シャッター判別あり: 896打ち切り＋モード混合の残りあべし期待値。
+ * 判別コストなし（内部用）。
  */
-export function expectedRemainingAbeshiShutter(
+export function expectedRemainingAbeshiShutterRaw(
   current: number,
   phase: Phase,
 ): number | null {
@@ -115,6 +118,40 @@ export function expectedRemainingAbeshiShutter(
   }
 
   return expectedRemainingFromMasses(masses, current)
+}
+
+/**
+ * シャッター判別あり＋判別コスト込み。
+ * 体感分布: 判別完了まで 45/175/300/420 あべしに 2:3:3:2 で引っ張られる。
+ * - 現在あべしが完了点未満 → 完了点まで進めてからシャッター残り
+ * - 完了点以上 → 判別済みとして現在からのシャッター残り
+ */
+export function expectedRemainingAbeshiShutter(
+  current: number,
+  phase: Phase,
+): number | null {
+  if (current < 0) return null
+  if (current >= SHUTTER_CAP) return null
+
+  let totalW = 0
+  let sum = 0
+
+  for (const { abeshi: d, weight: w } of SHUTTER_DISC_DIST) {
+    let rem: number | null
+    if (current >= d) {
+      rem = expectedRemainingAbeshiShutterRaw(current, phase)
+    } else {
+      const after = expectedRemainingAbeshiShutterRaw(d, phase)
+      if (after == null) rem = null
+      else rem = d - current + after
+    }
+    if (rem == null || rem < 0) continue
+    totalW += w
+    sum += w * rem
+  }
+
+  if (totalW <= 0) return null
+  return sum / totalW
 }
 
 function expectedRemainingFromMasses(
@@ -164,11 +201,11 @@ export function buildPremises(
     {
       label: 'シャッター判別',
       value: shutter
-        ? `あり（${SHUTTER_CAP}以内打ち切り＋モード混合）`
-        : 'なし（モード別）',
+        ? `あり（${SHUTTER_CAP}以内混合＋判別コスト）`
+        : 'なし（通常A確定）',
       basis: shutter
-        ? '人生期待値論ノート準拠。浅いA・B・C・天国をモード滞在率で混合'
-        : '各モードの期待値を個別表示。滞在率は公開のモード移行率',
+        ? `判別完了まで 45/175/300/420あべしに 2:3:3:2（平均約${SHUTTER_DISC_AVG_ABESHI.toFixed(0)}）。完了前は完了点まで進めてから896混合`
+        : 'シャッター未判別台は通常Aとして計算（モード混合しない）',
     },
     {
       label: '初当たり（AT）期待獲得出玉',
@@ -202,9 +239,9 @@ export function buildPremises(
 
   if (!shutter) {
     premises.push({
-      label: 'モード滞在率',
-      value: stayText,
-      basis: `web情報「状況別のモード振り分け」設定1（${PHASE_LABELS[phase]}）。モード不問行は未当選で生存するモードの滞在率で残りあべしを加重平均`,
+      label: 'モード扱い',
+      value: '通常A確定',
+      basis: '未判別台の主計算はA。参考として他モードも併記',
     })
   } else {
     premises.push({
@@ -226,7 +263,7 @@ export function calculateHokutoTensei2(input: CalcInput): ModeResult[] {
     return [
       toResult(
         'shutter',
-        `シャッター(${SHUTTER_CAP}以内混合)`,
+        `シャッター(${SHUTTER_CAP}以内＋判別コスト)`,
         expectedRemainingAbeshiShutter(n, phase),
         null,
       ),
@@ -234,7 +271,21 @@ export function calculateHokutoTensei2(input: CalcInput): ModeResult[] {
   }
 
   const stay = MODE_STAY_RATE[phase]
-  const perMode = MODES.map((mode) =>
+  // 未判別台は通常A確定を主結果にする
+  const modeA = toResult(
+    'A',
+    MODE_LABELS.A,
+    expectedRemainingAbeshi('A', n, phase),
+    stay.A,
+  )
+  const primary = toResult(
+    'blend',
+    '通常A確定（未判別）',
+    modeA.expectedRemainingAbeshi,
+    100,
+  )
+
+  const others = (['B', 'C', 'heaven'] as const).map((mode) =>
     toResult(
       mode,
       MODE_LABELS[mode],
@@ -243,27 +294,5 @@ export function calculateHokutoTensei2(input: CalcInput): ModeResult[] {
     ),
   )
 
-  // 未当選で生存しているモードだけ再正規化し、滞在率加重の残りあべしからモード不問EV
-  let blendWeight = 0
-  let blendRemaining = 0
-  for (const row of perMode) {
-    if (
-      !row.reachable ||
-      row.expectedRemainingAbeshi == null ||
-      row.stayProbability == null
-    ) {
-      continue
-    }
-    blendWeight += row.stayProbability
-    blendRemaining += row.stayProbability * row.expectedRemainingAbeshi
-  }
-
-  const blended = toResult(
-    'blend',
-    'モード不問（滞在率加重）',
-    blendWeight > 0 ? blendRemaining / blendWeight : null,
-    blendWeight > 0 ? blendWeight : null,
-  )
-
-  return [blended, ...perMode]
+  return [primary, modeA, ...others]
 }

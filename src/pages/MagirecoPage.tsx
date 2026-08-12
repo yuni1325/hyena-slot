@@ -68,13 +68,13 @@ export default function MagirecoPage() {
         <label className="field">
           <span>実G数（ボーナス間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={700}
             value={actualText}
-            onChange={(e) => setActualText(e.target.value)}
-            onBlur={() => setActualText(String(actualGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setActualText(v) }}
+            onBlur={() => setActualText(actualGames === 0 ? '' : String(actualGames))}
           />
         </label>
         <p className="inline-note">

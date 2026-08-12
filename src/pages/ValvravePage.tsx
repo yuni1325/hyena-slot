@@ -35,7 +35,7 @@ export default function ValvravePage() {
   const [actualText, setActualText] = useState('520')
   const [displayText, setDisplayText] = useState('200')
   const [czMode, setCzMode] = useState<CzMode>('unknown')
-  const [throughText, setThroughText] = useState('0')
+  const [throughText, setThroughText] = useState('')
   const [closingHours, setClosingHours] = useState<ClosingHours>(
     DEFAULT_CLOSING_HOURS,
   )
@@ -94,13 +94,13 @@ export default function ValvravePage() {
         <label className="field">
           <span>実G数（ボーナス&AT間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1600}
             value={actualText}
-            onChange={(e) => setActualText(e.target.value)}
-            onBlur={() => setActualText(String(actualGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setActualText(v) }}
+            onBlur={() => setActualText(actualGames === 0 ? '' : String(actualGames))}
           />
         </label>
         <p className="inline-note">
@@ -111,13 +111,13 @@ export default function ValvravePage() {
         <label className="field">
           <span>表示G数（CZ間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1200}
             value={displayText}
-            onChange={(e) => setDisplayText(e.target.value)}
-            onBlur={() => setDisplayText(String(displayGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setDisplayText(v) }}
+            onBlur={() => setDisplayText(displayGames === 0 ? '' : String(displayGames))}
           />
         </label>
         <p className="inline-note">
@@ -142,7 +142,7 @@ export default function ValvravePage() {
           <span>CZスルー回数</span>
           <select
             value={String(throughCount)}
-            onChange={(e) => setThroughText(e.target.value)}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setThroughText(v) }}
           >
             {Array.from({ length: PREMISES.czThroughMax + 1 }, (_, i) => (
               <option key={i} value={i}>

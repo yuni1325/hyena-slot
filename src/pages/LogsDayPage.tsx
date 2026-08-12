@@ -1,8 +1,8 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import SessionStatsBar from '../components/SessionStatsBar'
-import { formatNum, formatRate, rateTone } from '../lib/format'
+import { formatNum, formatRate, rateTone, signedTone } from '../lib/format'
 import { useSessions } from '../sessions/SessionProvider'
-import { aggregateByMachine, aggregateSessions, sessionsOnDate } from '../sessions/stats'
+import { aggregateByMachine, aggregateSessions, resolveExpectedPayoutRate, sessionsOnDate } from '../sessions/stats'
 import { actualPayoutRate, recoverMedalsFrom } from '../sessions/types'
 import { getSessionMachine } from '../sessions/registry'
 
@@ -55,10 +55,11 @@ export default function LogsDayPage() {
         ) : (
           <ul className="session-list">
             {daySessions.map((s) => {
+              const expected = resolveExpectedPayoutRate(s)
               const actual = actualPayoutRate(s.investMedals, s.diffMedals)
               const delta =
-                actual != null && s.expectedPayoutRate != null
-                  ? actual - s.expectedPayoutRate
+                actual != null && expected != null
+                  ? actual - expected
                   : null
               const short =
                 getSessionMachine(s.machineId)?.shortName ?? s.machineName
@@ -72,14 +73,17 @@ export default function LogsDayPage() {
                         recoverMedalsFrom(s.investMedals, s.diffMedals),
                         0,
                       )}
-                      ／差枚 {s.diffMedals > 0 ? '+' : ''}
-                      {formatNum(s.diffMedals, 0)}
+                      ／差枚{' '}
+                      <span className={signedTone(s.diffMedals)}>
+                        {s.diffMedals > 0 ? '+' : ''}
+                        {formatNum(s.diffMedals, 0)}
+                      </span>
                     </span>
                     <span className="session-card-rates">
                       <span>
                         期待{' '}
-                        <strong className={`rate ${rateTone(s.expectedPayoutRate)}`}>
-                          {formatRate(s.expectedPayoutRate)}
+                        <strong className={`rate ${rateTone(expected)}`}>
+                          {formatRate(expected)}
                         </strong>
                       </span>
                       <span>
@@ -90,7 +94,7 @@ export default function LogsDayPage() {
                       </span>
                       <span>
                         差{' '}
-                        <strong>
+                        <strong className={signedTone(delta)}>
                           {delta == null
                             ? '—'
                             : `${delta > 0 ? '+' : ''}${delta.toFixed(1)}pp`}

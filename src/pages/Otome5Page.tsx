@@ -32,7 +32,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 
 export default function Otome5Page() {
   const [actualText, setActualText] = useState('371')
-  const [displayText, setDisplayText] = useState('0')
+  const [displayText, setDisplayText] = useState('')
   const [cycleText, setCycleText] = useState('1')
   const [shortened, setShortened] = useState(false)
   const [closingHours, setClosingHours] = useState<ClosingHours>(
@@ -125,13 +125,13 @@ export default function Otome5Page() {
         <label className="field">
           <span>実G数</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1100}
             value={actualText}
-            onChange={(e) => setActualText(e.target.value)}
-            onBlur={() => setActualText(String(actualGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setActualText(v) }}
+            onBlur={() => setActualText(actualGames === 0 ? '' : String(actualGames))}
           />
         </label>
         <p className="inline-note">
@@ -141,13 +141,13 @@ export default function Otome5Page() {
         <label className="field">
           <span>表示G数</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={550}
             value={displayText}
-            onChange={(e) => setDisplayText(e.target.value)}
-            onBlur={() => setDisplayText(String(displayGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setDisplayText(v) }}
+            onBlur={() => setDisplayText(displayGames === 0 ? '' : String(displayGames))}
           />
         </label>
         <p className="inline-note">
@@ -158,7 +158,7 @@ export default function Otome5Page() {
           <span>現在周期</span>
           <select
             value={String(cycle)}
-            onChange={(e) => setCycleText(e.target.value)}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setCycleText(v) }}
           >
             {cycleOptions.map((c) => (
               <option key={c} value={c}>

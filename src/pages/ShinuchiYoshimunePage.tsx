@@ -36,7 +36,7 @@ function parseIntSafe(text: string, fallback = 0): number {
 
 export default function ShinuchiYoshimunePage() {
   const [atText, setAtText] = useState('447')
-  const [czText, setCzText] = useState('0')
+  const [czText, setCzText] = useState('')
   const [cycleText, setCycleText] = useState('1')
   const [situation, setSituation] = useState<Situation>('normal')
   const [czMode, setCzMode] = useState<CzModeId>('A')
@@ -112,13 +112,13 @@ export default function ShinuchiYoshimunePage() {
         <label className="field">
           <span>現在のG数（AT間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1600}
             value={atText}
-            onChange={(e) => setAtText(e.target.value)}
-            onBlur={() => setAtText(String(atGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setAtText(v) }}
+            onBlur={() => setAtText(atGames === 0 ? '' : String(atGames))}
           />
         </label>
         <p className="inline-note">
@@ -128,13 +128,13 @@ export default function ShinuchiYoshimunePage() {
         <label className="field">
           <span>現在のG数（CZ間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1100}
             value={czText}
-            onChange={(e) => setCzText(e.target.value)}
-            onBlur={() => setCzText(String(czGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setCzText(v) }}
+            onBlur={() => setCzText(czGames === 0 ? '' : String(czGames))}
           />
         </label>
         <p className="inline-note">CZ間1000GでCZ。周期天井との近い方で近似。</p>
@@ -142,12 +142,12 @@ export default function ShinuchiYoshimunePage() {
         <label className="field">
           <span>現在周期</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={1}
             max={6}
             value={cycleText}
-            onChange={(e) => setCycleText(e.target.value)}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setCycleText(v) }}
             onBlur={() =>
               setCycleText(
                 String(Math.min(maxCycleForMode, Math.max(1, cycle))),

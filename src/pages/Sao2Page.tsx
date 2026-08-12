@@ -30,8 +30,8 @@ function parseIntSafe(text: string, fallback = 0): number {
 
 export default function Sao2Page() {
   const [atText, setAtText] = useState('437')
-  const [czText, setCzText] = useState('0')
-  const [displayText, setDisplayText] = useState('0')
+  const [czText, setCzText] = useState('')
+  const [displayText, setDisplayText] = useState('')
   const [czMode, setCzMode] = useState<CzModeId>('A')
   const [czShortened, setCzShortened] = useState(false)
   const [closingHours, setClosingHours] = useState<ClosingHours>(
@@ -110,13 +110,13 @@ export default function Sao2Page() {
         <label className="field">
           <span>実G数（AT間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1300}
             value={atText}
-            onChange={(e) => setAtText(e.target.value)}
-            onBlur={() => setAtText(String(atGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setAtText(v) }}
+            onBlur={() => setAtText(atGames === 0 ? '' : String(atGames))}
           />
         </label>
         <p className="inline-note">AT間天井1200G+α。web情報表の打ち出しG。</p>
@@ -124,13 +124,13 @@ export default function Sao2Page() {
         <label className="field">
           <span>実G数（CZ間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={600}
             value={czText}
-            onChange={(e) => setCzText(e.target.value)}
-            onBlur={() => setCzText(String(czGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setCzText(v) }}
+            onBlur={() => setCzText(czGames === 0 ? '' : String(czGames))}
           />
         </label>
         <p className="inline-note">
@@ -140,13 +140,13 @@ export default function Sao2Page() {
         <label className="field">
           <span>表示G数（液晶）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={900}
             value={displayText}
-            onChange={(e) => setDisplayText(e.target.value)}
-            onBlur={() => setDisplayText(String(displayGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setDisplayText(v) }}
+            onBlur={() => setDisplayText(displayGames === 0 ? '' : String(displayGames))}
           />
         </label>
         <p className="inline-note">

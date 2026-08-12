@@ -9,7 +9,10 @@ export type MachineSession = {
   machineName: string
   /** 機種ごとの計算入力スナップショット */
   inputs: Record<string, unknown>
-  /** 保存時点の期待出玉率（％） */
+  /**
+   * 期待出玉率（％）。保存時点の値だが、表示・集計時は
+   * 現行計算式で inputs から再算出した値を優先する。
+   */
   expectedPayoutRate: number | null
   /** 投資枚数 */
   investMedals: number

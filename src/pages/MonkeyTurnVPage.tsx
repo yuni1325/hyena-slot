@@ -138,13 +138,13 @@ export default function MonkeyTurnVPage() {
         <label className="field">
           <span>実G数</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={999}
             value={actualText}
-            onChange={(e) => setActualText(e.target.value)}
-            onBlur={() => setActualText(String(actualGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setActualText(v) }}
+            onBlur={() => setActualText(actualGames === 0 ? '' : String(actualGames))}
           />
         </label>
         <p className="inline-note">
@@ -174,7 +174,7 @@ export default function MonkeyTurnVPage() {
           <span>現在周期</span>
           <select
             value={String(cycle)}
-            onChange={(e) => setCycleText(e.target.value)}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setCycleText(v) }}
           >
             {cycleOptions.map((c) => (
               <option key={c} value={c}>

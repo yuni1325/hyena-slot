@@ -107,13 +107,13 @@ export default function KabaneriUnatoPage() {
         <label className="field">
           <span>表示G数</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={999}
             value={displayText}
-            onChange={(e) => setDisplayText(e.target.value)}
-            onBlur={() => setDisplayText(String(displayGames))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setDisplayText(v) }}
+            onBlur={() => setDisplayText(displayGames === 0 ? '' : String(displayGames))}
           />
         </label>
 
@@ -121,7 +121,7 @@ export default function KabaneriUnatoPage() {
           <span>現在周期</span>
           <select
             value={String(cycle)}
-            onChange={(e) => setCycleText(e.target.value)}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setCycleText(v) }}
           >
             {cycleOptions.map((c) => (
               <option key={c} value={c}>

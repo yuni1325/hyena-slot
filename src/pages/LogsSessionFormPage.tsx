@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import SessionMachineFields from '../components/SessionMachineFields'
-import { formatNum, formatRate, rateTone } from '../lib/format'
+import { formatNum, formatRate, rateTone, signedTone } from '../lib/format'
 import {
   getSessionMachine,
   sessionMachines,
@@ -186,28 +186,52 @@ export default function LogsSessionFormPage() {
           <label className="field">
             <span>投資枚数</span>
             <input
-              type="number"
+              type="text"
               inputMode="numeric"
-              min={1}
               value={investText}
-              onChange={(e) => setInvestText(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v === '' || /^\d+$/.test(v)) setInvestText(v)
+              }}
+              onBlur={() => {
+                const n = Number(investText)
+                if (investText.trim() === '' || !Number.isFinite(n) || n === 0) {
+                  setInvestText('')
+                } else {
+                  setInvestText(String(Math.floor(n)))
+                }
+              }}
               placeholder="例: 5000"
             />
           </label>
           <label className="field">
             <span>回収枚数</span>
             <input
-              type="number"
+              type="text"
               inputMode="numeric"
-              min={0}
               value={recoverText}
-              onChange={(e) => setRecoverText(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value
+                if (v === '' || /^\d+$/.test(v)) setRecoverText(v)
+              }}
+              onBlur={() => {
+                const n = Number(recoverText)
+                if (
+                  recoverText.trim() === '' ||
+                  !Number.isFinite(n) ||
+                  n === 0
+                ) {
+                  setRecoverText('')
+                } else {
+                  setRecoverText(String(Math.floor(n)))
+                }
+              }}
               placeholder="例: 6200"
             />
           </label>
           <div className="field field-full session-diff-display">
             <span className="label">差枚（回収 − 投資）</span>
-            <strong>
+            <strong className={signedTone(diffMedals)}>
               {diffMedals == null
                 ? '—'
                 : `${diffMedals > 0 ? '+' : ''}${formatNum(diffMedals, 0)}`}
@@ -239,7 +263,7 @@ export default function LogsSessionFormPage() {
           </div>
           <div>
             <span className="label">差</span>
-            <strong>
+            <strong className={signedTone(delta)}>
               {delta == null
                 ? '—'
                 : `${delta > 0 ? '+' : ''}${delta.toFixed(1)}pp`}

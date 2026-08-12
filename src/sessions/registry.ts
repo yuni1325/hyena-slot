@@ -141,7 +141,7 @@ export const sessionMachines: SessionMachineDef[] = [
         type: 'select',
         options: selectOptions(PHASE_LABELS),
       },
-      { key: 'shutter', label: 'シャッター判別あり', type: 'boolean' },
+      { key: 'shutter', label: 'シャッター判別あり（＋判別コスト）', type: 'boolean' },
     ],
     defaultInputs: () => ({
       currentAbeshi: 369,

@@ -69,13 +69,13 @@ export default function MillionGodPage() {
         <label className="field">
           <span>現在のG数（GG間）</span>
           <input
-            type="number"
+            type="text"
             inputMode="numeric"
             min={0}
             max={1500}
             value={gamesText}
-            onChange={(e) => setGamesText(e.target.value)}
-            onBlur={() => setGamesText(String(games))}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGamesText(v) }}
+            onBlur={() => setGamesText(games === 0 ? '' : String(games))}
           />
         </label>
         <p className="inline-note">
