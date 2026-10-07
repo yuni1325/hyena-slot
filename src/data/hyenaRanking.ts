@@ -147,6 +147,20 @@ export const RANKING: RankEntry[] = [
   },
   {
     rank: 10,
+    machineId: 'lycoreco',
+    path: '/machines/lycoreco',
+    name: 'リコリコ',
+    score: 52.0,
+    beLabel: '300G',
+    aimLabel: '400G',
+    aimRate: 106.1,
+    ceilingLabel: '850G',
+    pickup: '高',
+    note: '新台・暫定。リセット/駆け抜け600G・上位CZ失敗250Gが本命',
+    tier: 'B',
+  },
+  {
+    rank: 11,
     machineId: 'million-god',
     path: '/machines/million-god',
     name: 'ミリオンゴッド',
@@ -160,7 +174,7 @@ export const RANKING: RankEntry[] = [
     tier: 'B',
   },
   {
-    rank: 11,
+    rank: 12,
     machineId: 'otome5',
     path: '/machines/otome5',
     name: '戦国乙女5',
@@ -174,7 +188,7 @@ export const RANKING: RankEntry[] = [
     tier: 'B',
   },
   {
-    rank: 12,
+    rank: 13,
     machineId: 'sao2',
     path: '/machines/sao2',
     name: 'SAO2',
@@ -188,7 +202,7 @@ export const RANKING: RankEntry[] = [
     tier: 'C',
   },
   {
-    rank: 13,
+    rank: 14,
     machineId: 'shinuchi-yoshimune',
     path: '/machines/shinuchi-yoshimune',
     name: '真打吉宗',
@@ -202,7 +216,7 @@ export const RANKING: RankEntry[] = [
     tier: 'C',
   },
   {
-    rank: 14,
+    rank: 15,
     machineId: 'valvrave2',
     path: '/machines/valvrave2',
     name: 'ヴヴヴ2',
@@ -216,7 +230,7 @@ export const RANKING: RankEntry[] = [
     tier: 'C',
   },
   {
-    rank: 15,
+    rank: 16,
     machineId: 'valvrave',
     path: '/machines/valvrave',
     name: 'ヴヴヴ',
