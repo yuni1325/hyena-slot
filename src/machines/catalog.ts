@@ -112,4 +112,11 @@ export const machineCards: MachineCard[] = [
     shortName: 'マギレコ',
     blurb: 'ボーナス間の実Gとリセット有無からポイント天井の期待値を算出',
   },
+  {
+    id: 'lycoreco',
+    path: '/machines/lycoreco',
+    name: 'スマスロ リコリス・リコイル',
+    shortName: 'リコリコ',
+    blurb: 'AT間の実Gと前回状況（通常／短縮／上位CZ失敗）から期待出玉率を算出',
+  },
 ]

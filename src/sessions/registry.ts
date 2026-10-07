@@ -68,6 +68,11 @@ import {
 } from '../machines/enen2/data'
 import { calculateBake } from '../machines/bakemonogatari/calc'
 import { calculateMagireco } from '../machines/magireco/calc'
+import { calculateLycoreco } from '../machines/lycoreco/calc'
+import {
+  SITUATION_LABEL as LYCORECO_SIT_LABEL,
+  type Situation as LycorecoSituation,
+} from '../machines/lycoreco/data'
 
 export type FieldOption = { value: string; label: string }
 
@@ -582,6 +587,29 @@ export const sessionMachines: SessionMachineDef[] = [
       calculateMagireco({
         actualGames: num(inputs.actualGames),
         shortened: bool(inputs.shortened),
+      }).expectedPayoutRate,
+  },
+  {
+    id: 'lycoreco',
+    name: 'スマスロ リコリス・リコイル',
+    shortName: 'リコリコ',
+    fields: [
+      {
+        key: 'situation',
+        label: '前回の状況',
+        type: 'select',
+        options: selectOptions(LYCORECO_SIT_LABEL),
+      },
+      { key: 'actualGames', label: '実G（AT間）', type: 'number', min: 0 },
+    ],
+    defaultInputs: () => ({
+      situation: 'normal',
+      actualGames: 400,
+    }),
+    expectedPayoutRate: (inputs) =>
+      calculateLycoreco({
+        actualGames: num(inputs.actualGames),
+        situation: str(inputs.situation, 'normal') as LycorecoSituation,
       }).expectedPayoutRate,
   },
 ]

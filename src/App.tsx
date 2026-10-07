@@ -15,6 +15,7 @@ import Valvrave2Page from './pages/Valvrave2Page'
 import Enen2Page from './pages/Enen2Page'
 import BakemonogatariPage from './pages/BakemonogatariPage'
 import MagirecoPage from './pages/MagirecoPage'
+import LycorecoPage from './pages/LycorecoPage'
 import LogsCalendarPage from './pages/LogsCalendarPage'
 import LogsDayPage from './pages/LogsDayPage'
 import LogsSessionFormPage from './pages/LogsSessionFormPage'
@@ -58,6 +59,7 @@ export default function App() {
             element={<BakemonogatariPage />}
           />
           <Route path="/machines/magireco" element={<MagirecoPage />} />
+          <Route path="/machines/lycoreco" element={<LycorecoPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>
