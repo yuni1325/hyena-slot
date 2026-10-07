@@ -119,4 +119,18 @@ export const machineCards: MachineCard[] = [
     shortName: 'リコリコ',
     blurb: 'AT間の実Gと前回状況（通常／短縮／上位CZ失敗）から期待出玉率を算出',
   },
+  {
+    id: 'juoh',
+    path: '/machines/juoh',
+    name: 'スマスロ 獣王',
+    shortName: '獣王',
+    blurb: 'SC間の実Gとリセット有無（天井999G／599G）から期待出玉率を算出',
+  },
+  {
+    id: 'mh-sunbreak',
+    path: '/machines/mh-sunbreak',
+    name: 'スマスロ モンスターハンターライズ：サンブレイク',
+    shortName: 'モンハンSB',
+    blurb: 'AT間の実Gから期待出玉率を算出（暫定モデル）',
+  },
 ]
