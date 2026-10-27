@@ -5,12 +5,12 @@ type Props = {
   footer?: boolean
 }
 
-/** 機種ページからホーム（機種一覧）へ戻る */
+/** 機種ページから機種ランキング（参考ページ）へ戻る */
 export default function BackToHomeButton({ footer = false }: Props) {
   return (
     <p className={`back-home-wrap${footer ? ' is-footer' : ''}`}>
-      <Link to="/" className="back-home">
-        ← TOPへ戻る
+      <Link to="/ranking" className="back-home">
+        ← 機種ランキングへ
       </Link>
     </p>
   )
