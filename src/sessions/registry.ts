@@ -73,16 +73,13 @@ import {
   SITUATION_LABEL as LYCORECO_SIT_LABEL,
   type Situation as LycorecoSituation,
 } from '../machines/lycoreco/data'
-import { calculateJuoh } from '../machines/juoh/calc'
-import {
-  SITUATION_LABEL as JUOH_SIT_LABEL,
-  type Situation as JuohSituation,
-} from '../machines/juoh/data'
-import { calculateMhSunbreak } from '../machines/mh-sunbreak/calc'
-import {
-  SITUATION_LABEL as MHSB_SIT_LABEL,
-  type Situation as MhsbSituation,
-} from '../machines/mh-sunbreak/data'
+import type { defineAnchoredMachine } from '../lib/anchoredCeiling'
+import { JUOH } from '../machines/juoh/spec'
+import { MH_SUNBREAK } from '../machines/mh-sunbreak/spec'
+import { AOBUTA } from '../machines/aobuta/spec'
+import { INDEX2 } from '../machines/index2/spec'
+import { SENCOLLE6 } from '../machines/sencolle6/spec'
+import { GAREI } from '../machines/garei/spec'
 
 export type FieldOption = { value: string; label: string }
 
@@ -142,6 +139,50 @@ const MONKEY_MODE_OPTS: FieldOption[] = MONKEY_MODES.map((m) => ({
 }))
 
 const CZ_CEILING_KINDS = Object.keys(CZ_CEILING_LABEL) as CzCeilingKind[]
+
+type AnchoredMachine<S extends string> = ReturnType<typeof defineAnchoredMachine<S>>
+
+/** 公開期待値表ベースの機種を稼働記録に登録する */
+function anchoredSession<S extends string>(
+  id: string,
+  name: string,
+  shortName: string,
+  m: AnchoredMachine<S>,
+  defaultSituation: S,
+  defaultGames: number,
+  /** 旧バージョンの状況IDの読み替え */
+  legacy: Record<string, S> = {},
+): SessionMachineDef {
+  const resolve = (v: unknown): S => {
+    const raw = typeof v === 'string' ? v : defaultSituation
+    if ((m.order as string[]).includes(raw)) return raw as S
+    return legacy[raw] ?? defaultSituation
+  }
+  return {
+    id,
+    name,
+    shortName,
+    fields: [
+      ...(m.order.length > 1
+        ? [
+            {
+              key: 'situation',
+              label: '前回の状況',
+              type: 'select' as const,
+              options: selectOptions(m.situationLabel),
+            },
+          ]
+        : []),
+      { key: 'actualGames', label: '実G', type: 'number', min: 0 },
+    ],
+    defaultInputs: () => ({ situation: defaultSituation, actualGames: defaultGames }),
+    expectedPayoutRate: (inputs) =>
+      m.calculate({
+        actualGames: num(inputs.actualGames),
+        situation: resolve(inputs.situation),
+      }).expectedPayoutRate,
+  }
+}
 
 export const sessionMachines: SessionMachineDef[] = [
   {
@@ -622,46 +663,29 @@ export const sessionMachines: SessionMachineDef[] = [
         situation: str(inputs.situation, 'normal') as LycorecoSituation,
       }).expectedPayoutRate,
   },
-  {
-    id: 'juoh',
-    name: 'スマスロ 獣王',
-    shortName: '獣王',
-    fields: [
-      {
-        key: 'situation',
-        label: '前回の状況',
-        type: 'select',
-        options: selectOptions(JUOH_SIT_LABEL),
-      },
-      { key: 'actualGames', label: '実G（SC間）', type: 'number', min: 0 },
-    ],
-    defaultInputs: () => ({ situation: 'normal', actualGames: 550 }),
-    expectedPayoutRate: (inputs) =>
-      calculateJuoh({
-        actualGames: num(inputs.actualGames),
-        situation: str(inputs.situation, 'normal') as JuohSituation,
-      }).expectedPayoutRate,
-  },
-  {
-    id: 'mh-sunbreak',
-    name: 'スマスロ モンスターハンターライズ：サンブレイク',
-    shortName: 'モンハンSB',
-    fields: [
-      {
-        key: 'situation',
-        label: '前回の状況',
-        type: 'select',
-        options: selectOptions(MHSB_SIT_LABEL),
-      },
-      { key: 'actualGames', label: '実G（AT間）', type: 'number', min: 0 },
-    ],
-    defaultInputs: () => ({ situation: 'afterAt', actualGames: 500 }),
-    expectedPayoutRate: (inputs) =>
-      calculateMhSunbreak({
-        actualGames: num(inputs.actualGames),
-        situation: str(inputs.situation, 'afterAt') as MhsbSituation,
-      }).expectedPayoutRate,
-  },
+  anchoredSession('juoh', 'スマスロ 獣王', '獣王', JUOH, 'nonSabaren', 550, {
+    normal: 'nonSabaren',
+  }),
+  anchoredSession(
+    'mh-sunbreak',
+    'スマスロ モンスターハンターライズ：サンブレイク',
+    'モンハンSB',
+    MH_SUNBREAK,
+    'afterAt',
+    450,
+    { reset: 'afterAt' },
+  ),
+  anchoredSession(
+    'aobuta',
+    'L青春ブタ野郎はバニーガール先輩の夢を見ない',
+    '青ブタ',
+    AOBUTA,
+    'tanpatsu',
+    200,
+  ),
+  anchoredSession('index2', 'スマスロ とある魔術の禁書目録2', '禁書目録2', INDEX2, 'czAfterAt', 250),
+  anchoredSession('sencolle6', '戦国コレクション6', '戦コレ6', SENCOLLE6, 'afterAt', 550),
+  anchoredSession('garei', 'Lパチスロ 喰霊-零-Re', '喰霊零Re', GAREI, 'normal', 600),
 ]
 
 /** catalog と id が揃っているか確認用 */

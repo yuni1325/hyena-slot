@@ -430,13 +430,13 @@ body {
     display: none;
   }
 
-  .result-row span:nth-last-child(2)::before {
+  .result-row:not(.result-row-kaba) span:nth-last-child(2)::before {
     content: 'G ';
     color: var(--ink-soft);
     font-weight: 600;
   }
 
-  .result-row span:nth-last-child(1)::before {
+  .result-row:not(.result-row-kaba) span:nth-last-child(1)::before {
     content: '投資 ';
     color: var(--ink-soft);
     font-weight: 600;
