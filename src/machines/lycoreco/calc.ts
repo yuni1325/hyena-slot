@@ -88,7 +88,9 @@ export function buildLycorecoPremises(input: LycorecoInput): Premise[] {
           ? `ラッシュ濃厚CZまで最大250G。0G〜${ANCHORS.upperFail0}%に合わせて獲得を補正`
           : s === 'shortened'
             ? 'リセット・ラッシュ駆け抜け時はAT間600G／CZ間250Gに短縮'
-            : 'AT間850G+α（プロローグ経由でラッシュ＋Vストック抽選）',
+            : s === 'upperRush'
+              ? `100G+αまで上位復帰の引き戻し区間。0G〜${ANCHORS.upperRush0}%に合わせて獲得を補正`
+              : 'AT間850G+α（プロローグ経由でラッシュ＋Vストック抽選）',
     },
     {
       label: '実効初当たり（モデル）',

@@ -18,6 +18,10 @@ import MagirecoPage from './pages/MagirecoPage'
 import LycorecoPage from './pages/LycorecoPage'
 import JuohPage from './pages/JuohPage'
 import MhSunbreakPage from './pages/MhSunbreakPage'
+import AobutaPage from './pages/AobutaPage'
+import Index2Page from './pages/Index2Page'
+import Sencolle6Page from './pages/Sencolle6Page'
+import GareiPage from './pages/GareiPage'
 import LogsCalendarPage from './pages/LogsCalendarPage'
 import LogsDayPage from './pages/LogsDayPage'
 import LogsSessionFormPage from './pages/LogsSessionFormPage'
@@ -64,6 +68,10 @@ export default function App() {
           <Route path="/machines/lycoreco" element={<LycorecoPage />} />
           <Route path="/machines/juoh" element={<JuohPage />} />
           <Route path="/machines/mh-sunbreak" element={<MhSunbreakPage />} />
+          <Route path="/machines/aobuta" element={<AobutaPage />} />
+          <Route path="/machines/index2" element={<Index2Page />} />
+          <Route path="/machines/sencolle6" element={<Sencolle6Page />} />
+          <Route path="/machines/garei" element={<GareiPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>

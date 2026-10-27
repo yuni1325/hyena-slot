@@ -17,6 +17,8 @@ type Props<S extends string> = {
   title: string
   tagline: string
   gamesLabel: string
+  /** 状況ごとに入力ゲーム数の種類が違う場合 */
+  gamesLabelFor?: (s: S) => string
   situationIds: S[]
   situationLabel: Record<S, string>
   defaultSituation: S
@@ -94,7 +96,7 @@ export default function HazardCeilingPage<S extends string>(props: Props<S>) {
         </label>
 
         <label className="field">
-          <span>{props.gamesLabel}</span>
+          <span>{props.gamesLabelFor ? props.gamesLabelFor(situation) : props.gamesLabel}</span>
           <input
             type="text"
             inputMode="numeric"
@@ -109,7 +111,7 @@ export default function HazardCeilingPage<S extends string>(props: Props<S>) {
           />
         </label>
         <p className="inline-note">
-          データカウンター想定の実G。天井 {props.ceilingFor(situation)}G+α。
+          {props.gamesLabelFor ? `${props.gamesLabelFor(situation)}を入力。` : 'データカウンター想定の実G。'}天井 {props.ceilingFor(situation)}G+α。
           {props.inputNote ? ` ${props.inputNote}` : ''}
         </p>
 

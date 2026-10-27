@@ -16,20 +16,22 @@
  * 上位CZ失敗後は 0G=103.9% に合うよう W だけ別に合わせる。
  */
 
-export type Situation = 'normal' | 'shortened' | 'upperFail'
+export type Situation = 'normal' | 'shortened' | 'upperFail' | 'upperRush'
 
-export const SITUATION_IDS: Situation[] = ['normal', 'shortened', 'upperFail']
+export const SITUATION_IDS: Situation[] = ['normal', 'shortened', 'upperFail', 'upperRush']
 
 export const SITUATION_LABEL: Record<Situation, string> = {
   normal: 'ラッシュ後（AT間天井850G）',
   shortened: 'リセット／ラッシュ駆け抜け後（600G）',
   upperFail: '上位CZ失敗後（250G）',
+  upperRush: '上位ラッシュ後（AT間天井850G）',
 }
 
 export const SITUATION_CEILING: Record<Situation, number> = {
   normal: 850,
   shortened: 600,
   upperFail: 250,
+  upperRush: 850,
 }
 
 /** 公開アンカー（設定1・開始G→天井までの出玉率） */
@@ -37,6 +39,8 @@ export const ANCHORS = {
   normal300: 100.3,
   normal400: 106.1,
   upperFail0: 103.9,
+  /** 上位AT終了後 0G〜天井（イチカツ・一撃） */
+  upperRush0: 105.1,
 } as const
 
 export const PREMISES = {
@@ -92,5 +96,9 @@ export const WIN_MEDALS: Record<Situation, number> = (() => {
     (ANCHORS.upperFail0 / 100) *
     m *
     expectedGames(HAZARD, SITUATION_CEILING.upperFail)
-  return { normal: base, shortened: base, upperFail: upper }
+  const upperRush =
+    (ANCHORS.upperRush0 / 100) *
+    m *
+    expectedGames(HAZARD, SITUATION_CEILING.upperRush)
+  return { normal: base, shortened: base, upperFail: upper, upperRush }
 })()
