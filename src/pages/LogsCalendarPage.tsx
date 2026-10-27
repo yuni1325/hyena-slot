@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import BackToHomeButton from '../components/BackToHomeButton'
 import SessionStatsBar, {
   SessionBackupActions,
 } from '../components/SessionStatsBar'
@@ -131,9 +130,18 @@ export default function LogsCalendarPage() {
   return (
     <div className="app logs-calendar-app">
       <div className="bg-grid" aria-hidden />
-      <header className="logs-cal-header">
-        <BackToHomeButton />
-        <h1 className="logs-cal-title">稼働記録</h1>
+      <header className="hero top-hero">
+        <p className="brand">
+          <Link to="/" className="brand-link">
+            HYENA SLOT
+          </Link>
+        </p>
+        <p className="tagline">稼働記録 — 日付をタップして記録</p>
+        <p className="home-logs-link-wrap">
+          <Link className="home-logs-link" to="/ranking">
+            機種ランキング・期待値計算（参考）→
+          </Link>
+        </p>
       </header>
 
       <main className="panel session-panel">

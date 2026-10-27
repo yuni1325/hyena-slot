@@ -19,7 +19,7 @@ export default function LogsDayPage() {
     return (
       <div className="app">
         <p>日付が不正です。</p>
-        <Link to="/logs">カレンダーへ</Link>
+        <Link to="/">カレンダーへ</Link>
       </div>
     )
   }
@@ -33,7 +33,7 @@ export default function LogsDayPage() {
       <div className="bg-grid" aria-hidden />
       <header className="hero">
         <p className="back-home-wrap">
-          <Link to="/logs" className="back-home">
+          <Link to="/" className="back-home">
             ← カレンダーへ
           </Link>
         </p>
@@ -123,7 +123,7 @@ export default function LogsDayPage() {
           <button
             type="button"
             className="btn-secondary"
-            onClick={() => navigate('/logs')}
+            onClick={() => navigate('/')}
           >
             カレンダーへ戻る
           </button>

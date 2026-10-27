@@ -62,7 +62,7 @@ export default function LogsSessionFormPage() {
     return (
       <div className="app">
         <p>日付が不正です。</p>
-        <Link to="/logs">カレンダーへ</Link>
+        <Link to="/">カレンダーへ</Link>
       </div>
     )
   }

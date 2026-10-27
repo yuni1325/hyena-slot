@@ -10,15 +10,19 @@ export default function HomePage() {
     <div className="app">
       <div className="bg-grid" aria-hidden />
       <header className="hero">
-        <p className="brand">HYENA SLOT</p>
+        <p className="back-home-wrap">
+          <Link to="/" className="back-home">
+            ← 稼働記録（カレンダー）へ
+          </Link>
+        </p>
+        <p className="brand">
+          <Link to="/" className="brand-link">
+            HYENA SLOT
+          </Link>
+        </p>
         <h1 className="machine-name">ハイエナ適性ランキング</h1>
         <p className="tagline">
-          実装機種を、日常の通常天井ハイエナ向けに総合採点したもの — タップで機種へ
-        </p>
-        <p className="home-logs-link-wrap">
-          <Link className="home-logs-link" to="/logs">
-            稼働記録（カレンダー）
-          </Link>
+          参考：日常の通常天井ハイエナ向けに総合採点 — タップで機種ごとの期待値計算へ
         </p>
       </header>
 

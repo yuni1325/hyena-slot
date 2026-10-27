@@ -150,8 +150,8 @@ export function SessionBackupActions({
           }}
         />
       </label>
-      <Link to="/" className="btn-secondary">
-        TOPへ
+      <Link to="/ranking" className="btn-secondary">
+        機種ランキング
       </Link>
     </div>
   )

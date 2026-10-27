@@ -31,9 +31,9 @@ export default function App() {
       <HashRouter>
         <ScrollToTop />
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/ranking" element={<Navigate to="/" replace />} />
-          <Route path="/logs" element={<LogsCalendarPage />} />
+          <Route path="/" element={<LogsCalendarPage />} />
+          <Route path="/ranking" element={<HomePage />} />
+          <Route path="/logs" element={<Navigate to="/" replace />} />
           <Route path="/logs/:date" element={<LogsDayPage />} />
           <Route path="/logs/:date/new" element={<LogsSessionFormPage />} />
           <Route
