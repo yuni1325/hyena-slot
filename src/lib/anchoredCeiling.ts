@@ -3,7 +3,8 @@
  *
  *  - 期待値（円）: 公開表の点を直線補間（表の範囲外はモデル曲線で延長）
  *  - 平均投資: ハザード一定モデル（p は表に最小二乗で合わせる）
- *  - 出玉率 = (平均投資 + 期待値) ÷ 平均投資
+ *  - 出玉率: 表に機械割（AT中の投入込み）があればそれを補間。
+ *            なければ (平均投資 + 期待値) ÷ 平均投資（通常時投資に対する回収率）
  *
  * 表の値を変えずに出玉率・投資・天井到達率を出すための仕組み。
  */
@@ -11,7 +12,7 @@
 import { expectedGames, type HazardCeilingResult } from './hazardCeiling'
 import type { Premise } from '../machines/types'
 
-export type EvPoint = [games: number, yen: number]
+export type EvPoint = [games: number, yen: number, payoutRate?: number]
 
 export type AnchoredSituation = {
   label: string
@@ -21,6 +22,7 @@ export type AnchoredSituation = {
   points: EvPoint[]
   /** 状況固有の補足（前提一覧に表示） */
   note?: string
+  /** 表に機械割（%）の列があるとき、出玉率はそれを補間して使う */
 }
 
 export type AnchoredSpec<S extends string> = {
@@ -83,6 +85,21 @@ export function interpolateYen(
   return last[1]
 }
 
+/** 機械割列の補間（範囲外は端の値） */
+function interpolateRate(points: EvPoint[], g: number): number | null {
+  const pts = points.filter((pt): pt is [number, number, number] => pt[2] != null)
+  if (pts.length !== points.length || pts.length === 0) return null
+  if (g <= pts[0][0]) return pts[0][2]
+  const last = pts[pts.length - 1]
+  if (g >= last[0]) return last[2]
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [g0, , r0] = pts[i]
+    const [g1, , r1] = pts[i + 1]
+    if (g >= g0 && g <= g1) return r0 + ((r1 - r0) * (g - g0)) / (g1 - g0)
+  }
+  return last[2]
+}
+
 export function defineAnchoredMachine<S extends string>(spec: AnchoredSpec<S>) {
   const mPerG = 50 / spec.baseGamesPer50
   const fitted = Object.fromEntries(
@@ -121,9 +138,10 @@ export function defineAnchoredMachine<S extends string>(spec: AnchoredSpec<S>) {
     const investMedals = avgGames * mPerG
     const yen = interpolateYen(sit.points, f, sit.ceiling, g, mPerG)
     const win = Math.max(0, investMedals + yen / YEN_PER_MEDAL)
+    const tableRate = interpolateRate(sit.points, g)
     return {
       reachable: true,
-      expectedPayoutRate: (win / investMedals) * 100,
+      expectedPayoutRate: tableRate ?? (win / investMedals) * 100,
       expectedWinMedals: win,
       yenEv: yen,
       investYen: investMedals * YEN_PER_MEDAL,
@@ -162,6 +180,15 @@ export function defineAnchoredMachine<S extends string>(spec: AnchoredSpec<S>) {
         basis: `表の範囲 ${first[0]}G（${signed(first[1])}）〜 ${last[0]}G（${signed(last[1])}）${
           first[0] > 50 ? `。${first[0] - 50}G未満は表がないため計算しない` : ''
         }`,
+      },
+      {
+        label: '出玉率の定義',
+        value: interpolateRate(pts, first[0]) != null ? '機械割（表の値）' : '通常時投資に対する回収率',
+        basis:
+          interpolateRate(pts, first[0]) != null
+            ? 'AT中の投入も含めた機械割。表の値を補間'
+            : '表に機械割がないため（平均投資＋期待値）÷平均投資。AT中の投入を含まないので機械割より高めに出る',
+        derived: interpolateRate(pts, first[0]) == null,
       },
       {
         label: '損益分岐（等価）',

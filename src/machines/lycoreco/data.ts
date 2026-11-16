@@ -39,7 +39,7 @@ export const ANCHORS = {
   normal300: 100.3,
   normal400: 106.1,
   upperFail0: 103.9,
-  /** 上位AT終了後 0G〜天井（イチカツ・一撃） */
+  /** 上位AT終了後 0G〜天井（解析サイト公表の機械割） */
   upperRush0: 105.1,
 } as const
 

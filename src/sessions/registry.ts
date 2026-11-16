@@ -672,7 +672,7 @@ export const sessionMachines: SessionMachineDef[] = [
     'モンハンSB',
     MH_SUNBREAK,
     'afterAt',
-    450,
+    300,
     { reset: 'afterAt' },
   ),
   anchoredSession(
@@ -684,7 +684,7 @@ export const sessionMachines: SessionMachineDef[] = [
     200,
   ),
   anchoredSession('index2', 'スマスロ とある魔術の禁書目録2', '禁書目録2', INDEX2, 'czAfterAt', 250),
-  anchoredSession('sencolle6', '戦国コレクション6', '戦コレ6', SENCOLLE6, 'afterAt', 550),
+  anchoredSession('sencolle6', '戦国コレクション6', '戦コレ6', SENCOLLE6, 'afterAt', 350),
   anchoredSession('garei', 'Lパチスロ 喰霊-零-Re', '喰霊零Re', GAREI, 'normal', 600),
 ]
 
