@@ -80,6 +80,10 @@ import { AOBUTA } from '../machines/aobuta/spec'
 import { INDEX2 } from '../machines/index2/spec'
 import { SENCOLLE6 } from '../machines/sencolle6/spec'
 import { GAREI } from '../machines/garei/spec'
+import { VIVY } from '../machines/vivy/spec'
+import { KANOKARI } from '../machines/kanokari/spec'
+import { TENTEN } from '../machines/tenten/spec'
+import { SF6 } from '../machines/sf6/spec'
 
 export type FieldOption = { value: string; label: string }
 
@@ -686,6 +690,10 @@ export const sessionMachines: SessionMachineDef[] = [
   anchoredSession('index2', 'スマスロ とある魔術の禁書目録2', '禁書目録2', INDEX2, 'czAfterAt', 250),
   anchoredSession('sencolle6', '戦国コレクション6', '戦コレ6', SENCOLLE6, 'afterAt', 350),
   anchoredSession('garei', 'Lパチスロ 喰霊-零-Re', '喰霊零Re', GAREI, 'normal', 600),
+  anchoredSession('vivy', "スロット Vivy -Fluorite Eye's Song-", 'Vivy', VIVY, 'afterAt', 300),
+  anchoredSession('kanokari', 'Lパチスロ 彼女、お借りします', 'かのかり', KANOKARI, 'reg', 350),
+  anchoredSession('tenten', 'L転生王女と天才令嬢の魔法革命', '転天', TENTEN, 'afterAt', 150),
+  anchoredSession('sf6', 'スマスロ ストリートファイター6', 'スト6', SF6, 'afterSt', 300),
 ]
 
 /** catalog と id が揃っているか確認用 */

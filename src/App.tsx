@@ -22,6 +22,10 @@ import AobutaPage from './pages/AobutaPage'
 import Index2Page from './pages/Index2Page'
 import Sencolle6Page from './pages/Sencolle6Page'
 import GareiPage from './pages/GareiPage'
+import VivyPage from './pages/VivyPage'
+import KanokariPage from './pages/KanokariPage'
+import TentenPage from './pages/TentenPage'
+import Sf6Page from './pages/Sf6Page'
 import LogsCalendarPage from './pages/LogsCalendarPage'
 import LogsDayPage from './pages/LogsDayPage'
 import LogsSessionFormPage from './pages/LogsSessionFormPage'
@@ -72,6 +76,10 @@ export default function App() {
           <Route path="/machines/index2" element={<Index2Page />} />
           <Route path="/machines/sencolle6" element={<Sencolle6Page />} />
           <Route path="/machines/garei" element={<GareiPage />} />
+          <Route path="/machines/vivy" element={<VivyPage />} />
+          <Route path="/machines/kanokari" element={<KanokariPage />} />
+          <Route path="/machines/tenten" element={<TentenPage />} />
+          <Route path="/machines/sf6" element={<Sf6Page />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </HashRouter>
