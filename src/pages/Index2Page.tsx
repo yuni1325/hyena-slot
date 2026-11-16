@@ -11,7 +11,7 @@ export default function Index2Page() {
       defaultSituation="czAfterAt"
       defaultGames={250}
       inputNote="CZ間（液晶G）とAT間（実G）の両方を見て、期待値の高いほうで判断。"
-      footnote="等価の狙い目（時給2,000円）：AT後 CZ間200G〜／AT間230G〜、設定変更後 CZ間40G〜／AT間280G〜。"
+      footnote="等価の狙い目：AT後 CZ間（液晶）210G〜／AT間（実G）245G〜（機械割106%）、設定変更後 CZ間40G〜／AT間70G〜。"
     />
   )
 }

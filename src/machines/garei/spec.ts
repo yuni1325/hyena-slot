@@ -3,7 +3,7 @@
  * 【暫定】実戦値の表は未公開。スロッターの道具箱の暫定モデルを使用:
  *   https://slot-toolbox.com/garei-zero-re-tenjo/
  *   条件: 設定1・50枚=36.1G・天井の無限ART価値を15,000円相当と仮定
- *   ※他サイトの等価狙い目は500G〜650Gと幅がある
+ *   ※他サイトの等価狙い目は500G〜650G、770G〜とする実戦派の見解もあり幅がある（2026/11時点で実戦値表なし）
  * 天井: ボーナス+ART間999G+α → 無限ART（次回ボーナスまで減算停止）。設定変更で短縮なし
  */
 import { defineAnchoredMachine } from '../../lib/anchoredCeiling'
@@ -22,7 +22,7 @@ export const GAREI = defineAnchoredMachine<Situation>({
   },
   baseGamesPer50: 36.1,
   pureInc: 1.4,
-  source: 'スロッターの道具箱の暫定モデル',
+  source: '推定モデル（暫定・実戦値の表は未公開）',
   provisional: true,
   extraPremises: [
     {

@@ -42,7 +42,7 @@ export const AOBUTA = defineAnchoredMachine<Situation>({
   },
   baseGamesPer50: 31.5,
   pureInc: 4.0,
-  source: 'イチカツ（たられば実戦値・等価）',
+  source: '実戦値（大規模データ集計・等価）',
   extraPremises: [
     {
       label: '設定',

@@ -6,13 +6,12 @@ export default function Sencolle6Page() {
     <AnchoredMachinePage<Situation>
       machineId="sencolle6"
       title="戦国コレクション6"
-      tagline="AT間の実Gから天井期待値を確認（暫定）"
+      tagline="AT間の実Gから天井期待値を確認"
       machine={SENCOLLE6}
       defaultSituation="afterAt"
-      defaultGames={550}
-      provisional
+      defaultGames={350}
       inputNote="周期天井（6周期・設定変更後3周期）は未反映。4周期目以降の台は浅いGでも狙える。"
-      footnote="等価の目安：400G〜プラス、実戦的には550G前後〜。設定変更後は周期で判断。"
+      footnote="損益分岐は約250G、機械割106%ラインは350G前後〜（約1.4万件の実戦集計）。設定変更後は周期で判断。"
     />
   )
 }

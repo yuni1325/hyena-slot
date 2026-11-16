@@ -10,7 +10,7 @@ export default function JuohPage() {
       machine={JUOH}
       defaultSituation="sabaren"
       defaultGames={550}
-      footnote="等価の狙い目（時給2,000円）：サバ連後540G〜、非サバ連後570G〜、設定変更後280G〜。サバ連後は0Gから100Gゾーン狙いも可（100Gで打ち切り）。"
+      footnote="等価の狙い目（時給2,000円）：サバ連後520G〜、非サバ連後550G〜、設定変更後250G〜（SC後サバ連前は260G〜）。サバ連後は0Gから100Gゾーン狙いも可（100Gで打ち切り）。"
     />
   )
 }

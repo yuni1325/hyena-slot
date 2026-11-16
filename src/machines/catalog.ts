@@ -152,7 +152,7 @@ export const machineCards: MachineCard[] = [
     path: '/machines/sencolle6',
     name: '戦国コレクション6',
     shortName: '戦コレ6',
-    blurb: 'AT間の実Gから期待値を算出（暫定）',
+    blurb: 'AT間の実Gから期待値を算出（実戦値）',
   },
   {
     id: 'garei',
