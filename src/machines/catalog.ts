@@ -161,4 +161,32 @@ export const machineCards: MachineCard[] = [
     shortName: '喰霊零Re',
     blurb: 'ボーナス+ART間の実Gから期待値を算出（暫定）',
   },
+  {
+    id: 'vivy',
+    path: '/machines/vivy',
+    name: "スロット Vivy -Fluorite Eye's Song-",
+    shortName: 'Vivy',
+    blurb: 'AT間の液晶Gとリセット有無から期待値を算出（暫定）',
+  },
+  {
+    id: 'kanokari',
+    path: '/machines/kanokari',
+    name: 'Lパチスロ 彼女、お借りします',
+    shortName: 'かのかり',
+    blurb: 'ボーナス間の実GとBIG/REG/設定変更から期待値を算出（実戦値）',
+  },
+  {
+    id: 'tenten',
+    path: '/machines/tenten',
+    name: 'L転生王女と天才令嬢の魔法革命',
+    shortName: '転天',
+    blurb: 'ボーナス間の実Gから期待値を算出（実戦値）',
+  },
+  {
+    id: 'sf6',
+    path: '/machines/sf6',
+    name: 'スマスロ ストリートファイター6',
+    shortName: 'スト6',
+    blurb: 'AT間の実Gから期待値を算出（実戦値）',
+  },
 ]
