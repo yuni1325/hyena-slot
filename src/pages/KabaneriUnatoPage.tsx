@@ -20,7 +20,12 @@ import {
   clampCycleToDisplay,
   cycleBoundsForDisplay,
 } from '../machines/kabaneri-unato/calc'
-import { PREMISES } from '../machines/kabaneri-unato/data'
+import {
+  DATA_VERSION_LABEL,
+  PREMISES,
+  REAL_DATA_INFO,
+  type DataVersion,
+} from '../machines/kabaneri-unato/data'
 
 function parseIntSafe(text: string, fallback = 0): number {
   const n = Number(text)
@@ -32,6 +37,7 @@ export default function KabaneriUnatoPage() {
   const [displayText, setDisplayText] = useState('280')
   const [cycleText, setCycleText] = useState('1')
   const [shortened, setShortened] = useState(false)
+  const [version, setVersion] = useState<DataVersion>('latest')
   const [closingHours, setClosingHours] = useState<ClosingHours>(
     DEFAULT_CLOSING_HOURS,
   )
@@ -67,8 +73,17 @@ export default function KabaneriUnatoPage() {
     [displayGames, cycle, shortened],
   )
 
-  const result = useMemo(() => calculateKabaneri(input), [input])
-  const premises = useMemo(() => buildKabaneriPremises(input), [input])
+  const result = useMemo(() => calculateKabaneri(input, version), [input, version])
+  const otherResult = useMemo(
+    () => calculateKabaneri(input, version === 'latest' ? 'legacy' : 'latest'),
+    [input, version],
+  )
+  const premises = useMemo(
+    () => buildKabaneriPremises(input, version),
+    [input, version],
+  )
+  const isReal = result.dataVersion === 'latest'
+  const pureInc = isReal ? REAL_DATA_INFO.pureInc : PREMISES.pureInc
 
   const closing = useMemo(
     () =>
@@ -76,10 +91,10 @@ export default function KabaneriUnatoPage() {
         hoursUntilClose: closingHours,
         avgGamesToHit: result.avgGames,
         expectedWinMedals: result.expectedWinMedals,
-        pureIncPerGame: PREMISES.pureInc,
+        pureIncPerGame: pureInc,
         rawPayoutRate: result.expectedPayoutRate,
       }),
-    [closingHours, result],
+    [closingHours, result, pureInc],
   )
 
   const cycleHint =
@@ -100,10 +115,34 @@ export default function KabaneriUnatoPage() {
           </Link>
         </p>
         <h1 className="machine-name">スマスロ甲鉄城のカバネリ 海門決戦</h1>
-        <p className="tagline">表示G・周期・短縮から天井狙いの期待値を確認</p>
+        <p className="tagline">表示G・周期・短縮から天井狙いの期待値を確認（最新の実戦値／旧データを切り替え可）</p>
       </header>
 
       <main className="panel">
+        <div className="version-toggle-wrap">
+          <div className="version-toggle" role="group" aria-label="使うデータ">
+            <span className="version-toggle-label">データ</span>
+            {(['latest', 'legacy'] as DataVersion[]).map((v) => (
+              <button
+                key={v}
+                type="button"
+                className={version === v ? 'is-on' : ''}
+                aria-pressed={version === v}
+                onClick={() => setVersion(v)}
+              >
+                {DATA_VERSION_LABEL[v]}
+              </button>
+            ))}
+          </div>
+          <p className="version-toggle-note">
+            {version === 'latest'
+              ? shortened
+                ? '短縮天井は実戦値が未公開のため、最新でも旧計算を使用'
+                : `通常時は約${(REAL_DATA_INFO.samples / 10000).toFixed(1)}万件の実戦集計（機械割）で計算`
+              : '2026/11/24以前の計算（シミュレーション表＋周期補正）'}
+          </p>
+        </div>
+
         <label className="field">
           <span>表示G数</span>
           <input
@@ -155,20 +194,30 @@ export default function KabaneriUnatoPage() {
             closing={closing}
             bonusLabel="ST"
             machineId="kabaneri-unato"
-            pureIncPerGame={PREMISES.pureInc}
+            pureIncPerGame={pureInc}
           />
+          <div className="result-row result-row-kaba">
+            <span className="mode">
+              {otherResult.dataVersion === result.dataVersion
+                ? '別データ（同じ計算）'
+                : `${DATA_VERSION_LABEL[otherResult.dataVersion]}では`}
+            </span>
+            <span>{formatRate(otherResult.expectedPayoutRate)}</span>
+          </div>
           <div className="result-row result-row-kaba">
             <span className="mode">初当たり（ST）期待獲得出玉</span>
             <span>{formatNum(result.expectedWinMedals, 1)}枚</span>
           </div>
           <div className="result-row result-row-kaba">
-            <span className="mode">web情報表ベース</span>
+            <span className="mode">{isReal ? '実戦値の機械割' : 'web情報表ベース'}</span>
             <span>{formatRate(result.tablePayoutRate)}</span>
           </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">周期補正</span>
-            <span>{formatCorrectionPp(result.cycleCorrectionPp)}</span>
-          </div>
+          {!isReal && (
+            <div className="result-row result-row-kaba">
+              <span className="mode">周期補正</span>
+              <span>{formatCorrectionPp(result.cycleCorrectionPp)}</span>
+            </div>
+          )}
           <div className="result-row result-row-kaba">
             <span className="mode">平均G（補正後）</span>
             <span>{formatNum(result.avgGames, 1)}G</span>
@@ -181,10 +230,12 @@ export default function KabaneriUnatoPage() {
             <span className="mode">web情報表・平均G</span>
             <span>{formatNum(result.tableAvgGames, 1)}G</span>
           </div>
-          <div className="result-row result-row-kaba">
-            <span className="mode">周期モデル・ST期待G</span>
-            <span>{formatNum(result.modelGamesToSt, 1)}G</span>
-          </div>
+          {!isReal && (
+            <div className="result-row result-row-kaba">
+              <span className="mode">周期モデル・ST期待G</span>
+              <span>{formatNum(result.modelGamesToSt, 1)}G</span>
+            </div>
+          )}
           <div className="result-row result-row-kaba">
             <span className="mode">G数天井残り</span>
             <span>{formatNum(result.remainingByG, 0)}G</span>
@@ -199,7 +250,7 @@ export default function KabaneriUnatoPage() {
             </div>
           )}
           <div className="result-row result-row-kaba">
-            <span className="mode">web情報表・等価期待値</span>
+            <span className="mode">{isReal ? '実戦値・等価期待値' : 'web情報表・等価期待値'}</span>
             <span>{formatYen(result.tableYenEv)}</span>
           </div>
           <div className="result-row result-row-kaba">
@@ -215,7 +266,9 @@ export default function KabaneriUnatoPage() {
         <section className="premises" aria-label="計算前提条件">
           <h2>計算に使った条件</h2>
           <p className="premises-note">
-            設定1固定・ST終了でヤメ／出玉率＝web情報表＋周期補正→閉店補正
+            {isReal
+              ? '設定1・ST終了でヤメ／出玉率＝実戦集計の機械割（周期は平均的に含む）→閉店補正'
+              : '設定1固定・ST終了でヤメ／出玉率＝web情報表＋周期補正→閉店補正'}
           </p>
           <ul>
             {premises.map((p) => (
@@ -230,7 +283,12 @@ export default function KabaneriUnatoPage() {
             ))}
           </ul>
           <p className="footnote">
-            期待出玉率＝web情報表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の約603枚。周期モデル差は50%だけ反映。規定G直前の周期当選は減衰。BIG:REG=1:1（REGはST約20%）。天井到達時のみエピソード＝ST確定。表示Gは150/300で周期下限を強制（低Gの高周期はポイント先行として許可）。
+            {isReal
+              ? `最新：通常ST後のAT間を約${(REAL_DATA_INFO.samples / 10000).toFixed(1)}万件集計した実戦値。約120Gから期待値プラス、機械割106%は${REAL_DATA_INFO.aim106}G〜。150G・300Gの周期天井の手前は山、直後（201〜250G・351〜400G）は谷になる。旧データに切り替えると更新前の計算で確認できる。`
+              : null}
+          </p>
+          <p className="footnote">
+            {isReal ? '旧データの計算：' : ''}期待出玉率＝web情報表ベース＋周期補正を、閉店までの余裕で保守補正。分子は表準拠の約603枚。周期モデル差は50%だけ反映。規定G直前の周期当選は減衰。BIG:REG=1:1（REGはST約20%）。天井到達時のみエピソード＝ST確定。表示Gは150/300で周期下限を強制（低Gの高周期はポイント先行として許可）。
           </p>
         </section>
         <BackToHomeButton footer />

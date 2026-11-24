@@ -2,6 +2,7 @@ import { machineCards } from '../machines/catalog'
 import { calculateHokutoTensei2 } from '../machines/hokuto-tensei2/calc'
 import { PHASE_LABELS, type Phase } from '../machines/hokuto-tensei2/data'
 import { calculateKabaneri } from '../machines/kabaneri-unato/calc'
+import type { DataVersionPref } from './dataVersion'
 import { calculateMonkey } from '../machines/monkey-turn-v/calc'
 import {
   MODE_LABEL as MONKEY_MODE_LABEL,
@@ -110,7 +111,18 @@ export type SessionMachineDef = {
   shortName: string
   fields: FieldDef[]
   defaultInputs: () => Record<string, unknown>
-  expectedPayoutRate: (inputs: Record<string, unknown>) => number | null
+  /**
+   * 期待出玉率。version 未指定は最新データ。
+   * hasDataVersions の機種だけ 'legacy'（更新前の計算）で結果が変わる。
+   */
+  expectedPayoutRate: (
+    inputs: Record<string, unknown>,
+    version?: DataVersionPref,
+  ) => number | null
+  /** データ更新で新旧の計算を持っている機種 */
+  hasDataVersions?: boolean
+  /** 旧データの説明（例: '〜2026/11/24'） */
+  legacyLabel?: string
 }
 
 function num(v: unknown, fallback = 0): number {
@@ -232,12 +244,17 @@ export const sessionMachines: SessionMachineDef[] = [
       cycle: 1,
       shortened: false,
     }),
-    expectedPayoutRate: (inputs) =>
-      calculateKabaneri({
-        displayGames: num(inputs.displayGames),
-        cycle: Math.min(6, Math.max(1, Math.floor(num(inputs.cycle, 1)))),
-        shortened: bool(inputs.shortened),
-      }).expectedPayoutRate,
+    hasDataVersions: true,
+    legacyLabel: '〜2026/11/24の計算',
+    expectedPayoutRate: (inputs, version) =>
+      calculateKabaneri(
+        {
+          displayGames: num(inputs.displayGames),
+          cycle: Math.min(6, Math.max(1, Math.floor(num(inputs.cycle, 1)))),
+          shortened: bool(inputs.shortened),
+        },
+        version,
+      ).expectedPayoutRate,
   },
   {
     id: 'monkey-turn-v',

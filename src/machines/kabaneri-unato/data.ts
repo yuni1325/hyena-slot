@@ -1,7 +1,8 @@
 /**
  * スマスロ 甲鉄城のカバネリ 海門決戦 — 設定1・天井ハイエナ用定数
- * 出典: web情報（天井・周期）／flick7（ST平均・参考）
+ * 出典: web情報（天井・周期）／実戦集計（ST平均・参考）
  * - https://flick7.net/slot/kabaneri_unato__c.php （ST平均獲得・参考）
+ * 2026/11/24〜: 通常時は実戦集計を主軸（下の DataVersion 参照）。旧計算は legacy として保持
  *
  * 出玉率の主軸はweb情報表。周期・CZは補正として加味する。
  * 初当りボーナス（周期・CZ成功とも）は概ね BIG:REG = 1:1
@@ -65,7 +66,7 @@ export const PREMISES = {
    * 表は「AT獲得枚数は常に一定」→ invest+yen から逆算すると約603.25枚で固定。
    */
   tableWinMedals: (EV_NORMAL[0].investYen + EV_NORMAL[0].yen) / 20,
-  /** flick7 実践ST平均（参考・主計算には使わない） */
+  /** 実戦集計のST平均（参考・旧計算では使わない） */
   practiceWinMedals: 627.1,
   stHitDenom: 422.5,
   firstHitDenom: 254.2,
@@ -168,4 +169,81 @@ export function interpolateEv(rows: EvRow[], games: number): EvRow {
 /** web情報表1行から獲得枚数（常に約603） */
 export function winMedalsFromEv(row: EvRow): number {
   return (row.investYen + row.yen) / PREMISES.yenPerMedal
+}
+
+/* ───────────── データ版（新旧切り替え） ───────────── */
+
+/**
+ * latest: 実戦集計（2026/11/24 反映）
+ *   フリック7 EV Analyzer・2026/7/26更新・30,856件
+ *   https://flick7.net/slot/kabaneri_unato/tenjo/
+ *   集計軸: AT間（通常ST後 AT2回目以降）・5枚等価。50G区間を中央に配置
+ *   周期の山谷（150G/300G付近）は実戦値に平均的に含まれる
+ * legacy: 2026/11/24 以前の計算（シミュレーション表＋周期補正）
+ *   https://nana-press.com/kaiseki/machine/1097/35403/
+ */
+export type DataVersion = 'latest' | 'legacy'
+
+export const DATA_VERSIONS: DataVersion[] = ['latest', 'legacy']
+
+export const DATA_VERSION_LABEL: Record<DataVersion, string> = {
+  latest: '最新（実戦値）',
+  legacy: '旧（シミュ値＋周期補正）',
+}
+
+export type RealEvRow = {
+  games: number
+  /** 等価期待値（円） */
+  yen: number
+  /** 機械割（％・AT中の投入込み） */
+  rate: number
+}
+
+/** 通常ST後・AT間の実戦集計（短縮時の実戦値は未公開） */
+export const EV_REAL_NORMAL: RealEvRow[] = [
+  { games: 0, yen: -1462, rate: 96.3 },
+  { games: 25, yen: -1462, rate: 96.3 },
+  { games: 75, yen: -554, rate: 98.5 },
+  { games: 125, yen: 128, rate: 100.4 },
+  { games: 175, yen: 660, rate: 101.9 },
+  { games: 225, yen: 306, rate: 100.9 },
+  { games: 275, yen: 1056, rate: 103.1 },
+  { games: 325, yen: 1478, rate: 104.4 },
+  { games: 375, yen: 278, rate: 100.8 },
+  { games: 425, yen: 824, rate: 102.4 },
+  { games: 475, yen: 1674, rate: 105.0 },
+  { games: 525, yen: 2202, rate: 106.7 },
+  { games: 575, yen: 2896, rate: 109.2 },
+  { games: 625, yen: 3428, rate: 111.2 },
+  { games: 675, yen: 4360, rate: 115.1 },
+  { games: 725, yen: 5050, rate: 118.3 },
+  { games: 775, yen: 5956, rate: 123.0 },
+  { games: 825, yen: 7080, rate: 129.9 },
+  { games: 875, yen: 8318, rate: 139.1 },
+  { games: 925, yen: 9648, rate: 151.4 },
+  { games: 975, yen: 11082, rate: 168.8 },
+]
+
+export const REAL_DATA_INFO = {
+  samples: 30856,
+  updated: '2026/7/26',
+  pureInc: 3.0,
+  aim106: 481,
+} as const
+
+export function interpolateRealEv(games: number): RealEvRow {
+  const rows = EV_REAL_NORMAL
+  const g = Math.max(0, games)
+  if (g <= rows[0].games) return rows[0]
+  const last = rows[rows.length - 1]
+  if (g >= last.games) return last
+  for (let i = 0; i < rows.length - 1; i++) {
+    const a = rows[i]
+    const b = rows[i + 1]
+    if (g >= a.games && g <= b.games) {
+      const t = (g - a.games) / (b.games - a.games)
+      return { games: g, yen: a.yen + (b.yen - a.yen) * t, rate: a.rate + (b.rate - a.rate) * t }
+    }
+  }
+  return last
 }

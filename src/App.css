@@ -1148,3 +1148,60 @@ body {
   font-size: 0.88rem;
   padding: 0.45rem 0.85rem;
 }
+
+/* ---------- データ版の切り替え ---------- */
+
+.version-toggle-wrap {
+  margin: 0 0 0.9rem;
+}
+
+.version-toggle {
+  display: flex;
+  align-items: stretch;
+  border: 2px solid var(--ink, #1a1c1e);
+  border-radius: 2px;
+  overflow: hidden;
+  background: #fffef9;
+}
+
+.version-toggle-label {
+  display: flex;
+  align-items: center;
+  padding: 0 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+  border-right: 1px solid var(--ink, #1a1c1e);
+}
+
+.version-toggle button {
+  flex: 1;
+  min-height: 2.4rem;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: inherit;
+  cursor: pointer;
+}
+
+.version-toggle button + button {
+  border-left: 1px solid var(--ink, #1a1c1e);
+}
+
+.version-toggle button.is-on {
+  background: var(--ink, #1a1c1e);
+  color: #fffef9;
+}
+
+.version-toggle-note {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: var(--ink-soft, #3d4248);
+}
+
+.alt-rate {
+  font-size: 0.72rem;
+  color: var(--ink-soft, #3d4248);
+}

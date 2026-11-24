@@ -76,7 +76,9 @@ export default function LogsSessionFormPage() {
     )
   }
 
-  const expected = machine ? machine.expectedPayoutRate(inputs) : null
+  const expected = machine ? machine.expectedPayoutRate(inputs, 'latest') : null
+  const legacyExpected =
+    machine?.hasDataVersions ? machine.expectedPayoutRate(inputs, 'legacy') : null
   const investMedals = Number(investText)
   const recoverMedals = Number(recoverText)
   const investOk = Number.isFinite(investMedals) && investMedals > 0
@@ -177,6 +179,11 @@ export default function LogsSessionFormPage() {
               <strong className={`rate ${rateTone(expected)}`}>
                 {formatRate(expected)}
               </strong>
+              {legacyExpected != null && (
+                <span className="alt-rate">
+                  {' '}（旧データ {formatRate(legacyExpected)}）
+                </span>
+              )}
             </p>
           </>
         )}
