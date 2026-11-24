@@ -1,3 +1,4 @@
+import type { DataVersionPref } from './dataVersion'
 import { getSessionMachine } from './registry'
 import { actualPayoutRate, type MachineSession } from './types'
 
@@ -26,11 +27,12 @@ export type MachineAggregate = AggregateStats & {
  */
 export function resolveExpectedPayoutRate(
   s: MachineSession,
+  version: DataVersionPref = 'latest',
 ): number | null {
   const def = getSessionMachine(s.machineId)
   if (def) {
     try {
-      const live = def.expectedPayoutRate(s.inputs ?? {})
+      const live = def.expectedPayoutRate(s.inputs ?? {}, version)
       if (live != null && Number.isFinite(live)) return live
     } catch {
       // fall through
@@ -46,7 +48,10 @@ export function isSessionWin(s: MachineSession): boolean {
   return s.investMedals + s.diffMedals > s.investMedals
 }
 
-export function aggregateSessions(sessions: MachineSession[]): AggregateStats {
+export function aggregateSessions(
+  sessions: MachineSession[],
+  version: DataVersionPref = 'latest',
+): AggregateStats {
   let totalInvest = 0
   let totalDiff = 0
   let expectedWeight = 0
@@ -58,7 +63,7 @@ export function aggregateSessions(sessions: MachineSession[]): AggregateStats {
     totalDiff += s.diffMedals
     if (!(s.investMedals > 0)) continue
     totalInvest += s.investMedals
-    const expected = resolveExpectedPayoutRate(s)
+    const expected = resolveExpectedPayoutRate(s, version)
     if (expected != null) {
       expectedWeight += s.investMedals
       expectedSum += expected * s.investMedals
@@ -107,8 +112,11 @@ export function sessionsOnDate(
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 }
 
-export function dayDeltaPp(sessions: MachineSession[]): number | null {
-  const agg = aggregateSessions(sessions)
+export function dayDeltaPp(
+  sessions: MachineSession[],
+  version: DataVersionPref = 'latest',
+): number | null {
+  const agg = aggregateSessions(sessions, version)
   if (agg.weightedExpectedRate == null || agg.weightedActualRate == null) {
     return null
   }
@@ -118,6 +126,7 @@ export function dayDeltaPp(sessions: MachineSession[]): number | null {
 /** 機種ごとの稼働台数・勝率・差枚など。台数が多い順。 */
 export function aggregateByMachine(
   sessions: MachineSession[],
+  version: DataVersionPref = 'latest',
 ): MachineAggregate[] {
   const byId = new Map<string, MachineSession[]>()
   for (const s of sessions) {
@@ -128,7 +137,7 @@ export function aggregateByMachine(
 
   const rows: MachineAggregate[] = []
   for (const [machineId, list] of byId) {
-    const agg = aggregateSessions(list)
+    const agg = aggregateSessions(list, version)
     rows.push({
       machineId,
       machineName: list[0]?.machineName ?? machineId,
@@ -140,4 +149,9 @@ export function aggregateByMachine(
     if (b.count !== a.count) return b.count - a.count
     return a.machineName.localeCompare(b.machineName, 'ja')
   })
+}
+
+/** 記録の中に新旧データを持つ機種があるか（切り替えを出すかどうか） */
+export function hasVersionedSessions(sessions: MachineSession[]): boolean {
+  return sessions.some((s) => getSessionMachine(s.machineId)?.hasDataVersions)
 }

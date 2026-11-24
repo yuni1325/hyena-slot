@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom'
 import SessionStatsBar, {
   SessionBackupActions,
 } from '../components/SessionStatsBar'
+import DataVersionToggle from '../components/DataVersionToggle'
 import { useSessions } from '../sessions/SessionProvider'
 import { formatNum } from '../lib/format'
 import {
   aggregateByMachine,
   aggregateSessions,
+  hasVersionedSessions,
   sessionsInMonth,
   sessionsInYear,
   sessionsOnDate,
@@ -37,19 +39,24 @@ export default function LogsCalendarPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
-  const { sessions, exportJson, importJsonText } = useSessions()
+  const { sessions, exportJson, importJsonText, dataVersion, setDataVersion } =
+    useSessions()
+  const showVersionToggle = useMemo(
+    () => hasVersionedSessions(sessions),
+    [sessions],
+  )
 
   const monthSessions = useMemo(
     () => sessionsInMonth(sessions, year, month),
     [sessions, year, month],
   )
   const monthStats = useMemo(
-    () => aggregateSessions(monthSessions),
-    [monthSessions],
+    () => aggregateSessions(monthSessions, dataVersion),
+    [monthSessions, dataVersion],
   )
   const monthByMachine = useMemo(
-    () => aggregateByMachine(monthSessions),
-    [monthSessions],
+    () => aggregateByMachine(monthSessions, dataVersion),
+    [monthSessions, dataVersion],
   )
 
   const yearSessions = useMemo(
@@ -57,12 +64,12 @@ export default function LogsCalendarPage() {
     [sessions, year],
   )
   const yearStats = useMemo(
-    () => aggregateSessions(yearSessions),
-    [yearSessions],
+    () => aggregateSessions(yearSessions, dataVersion),
+    [yearSessions, dataVersion],
   )
   const yearByMachine = useMemo(
-    () => aggregateByMachine(yearSessions),
-    [yearSessions],
+    () => aggregateByMachine(yearSessions, dataVersion),
+    [yearSessions, dataVersion],
   )
 
   const firstDow = useMemo(() => {
@@ -186,6 +193,14 @@ export default function LogsCalendarPage() {
             ),
           )}
         </div>
+
+        {showVersionToggle && (
+          <DataVersionToggle
+            value={dataVersion}
+            onChange={setDataVersion}
+            note="データを更新した機種（カバネリ海門）は、旧データでの期待出玉率でも集計できます"
+          />
+        )}
 
         <SessionStatsBar
           title={`${year}年${month}月の集計`}

@@ -2,7 +2,15 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import SessionStatsBar from '../components/SessionStatsBar'
 import { formatNum, formatRate, rateTone, signedTone } from '../lib/format'
 import { useSessions } from '../sessions/SessionProvider'
-import { aggregateByMachine, aggregateSessions, resolveExpectedPayoutRate, sessionsOnDate } from '../sessions/stats'
+import DataVersionToggle from '../components/DataVersionToggle'
+import { DATA_VERSION_PREF_LABEL, otherVersion } from '../sessions/dataVersion'
+import {
+  aggregateByMachine,
+  aggregateSessions,
+  hasVersionedSessions,
+  resolveExpectedPayoutRate,
+  sessionsOnDate,
+} from '../sessions/stats'
 import { actualPayoutRate, recoverMedalsFrom } from '../sessions/types'
 import { getSessionMachine } from '../sessions/registry'
 
@@ -13,7 +21,7 @@ function isValidDateKey(s: string | undefined): s is string {
 export default function LogsDayPage() {
   const { date } = useParams()
   const navigate = useNavigate()
-  const { sessions, deleteSession } = useSessions()
+  const { sessions, deleteSession, dataVersion, setDataVersion } = useSessions()
 
   if (!isValidDateKey(date)) {
     return (
@@ -25,8 +33,9 @@ export default function LogsDayPage() {
   }
 
   const daySessions = sessionsOnDate(sessions, date)
-  const stats = aggregateSessions(daySessions)
-  const byMachine = aggregateByMachine(daySessions)
+  const stats = aggregateSessions(daySessions, dataVersion)
+  const byMachine = aggregateByMachine(daySessions, dataVersion)
+  const showVersionToggle = hasVersionedSessions(daySessions)
 
   return (
     <div className="app">
@@ -42,6 +51,9 @@ export default function LogsDayPage() {
       </header>
 
       <main className="panel session-panel">
+        {showVersionToggle && (
+          <DataVersionToggle value={dataVersion} onChange={setDataVersion} />
+        )}
         <SessionStatsBar title="当日集計" stats={stats} byMachine={byMachine} />
 
         <div className="session-actions">
@@ -55,14 +67,18 @@ export default function LogsDayPage() {
         ) : (
           <ul className="session-list">
             {daySessions.map((s) => {
-              const expected = resolveExpectedPayoutRate(s)
+              const expected = resolveExpectedPayoutRate(s, dataVersion)
+              const def = getSessionMachine(s.machineId)
+              const altVersion = otherVersion(dataVersion)
+              const altExpected = def?.hasDataVersions
+                ? resolveExpectedPayoutRate(s, altVersion)
+                : null
               const actual = actualPayoutRate(s.investMedals, s.diffMedals)
               const delta =
                 actual != null && expected != null
                   ? actual - expected
                   : null
-              const short =
-                getSessionMachine(s.machineId)?.shortName ?? s.machineName
+              const short = def?.shortName ?? s.machineName
               return (
                 <li key={s.id} className="session-card">
                   <Link to={`/logs/${date}/${s.id}`} className="session-card-main">
@@ -101,6 +117,16 @@ export default function LogsDayPage() {
                         </strong>
                       </span>
                     </span>
+                    {altExpected != null && (
+                      <span className="alt-rate">
+                        {DATA_VERSION_PREF_LABEL[altVersion]}での期待{' '}
+                        {formatRate(altExpected)}
+                        {expected != null &&
+                          (Math.abs(altExpected - expected) < 0.05
+                            ? '（同じ）'
+                            : `（${altExpected - expected > 0 ? '+' : ''}${(altExpected - expected).toFixed(1)}pp）`)}
+                      </span>
+                    )}
                   </Link>
                   <button
                     type="button"

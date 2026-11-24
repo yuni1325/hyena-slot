@@ -1,13 +1,17 @@
 import type { Premise } from '../types'
 import {
+  DATA_VERSION_LABEL,
   EV_NORMAL,
   EV_SHORTENED,
   PREMISES,
+  REAL_DATA_INFO,
   czStPerGame,
   interpolateEv,
+  interpolateRealEv,
   medalsPerGame,
   stRateOnBonus,
   winMedalsFromEv,
+  type DataVersion,
 } from './data'
 
 export type KabaneriInput = {
@@ -50,6 +54,10 @@ export function clampCycleToDisplay(
 }
 
 export type KabaneriResult = {
+  /** 実際に使った計算（短縮時は latest 指定でも旧計算） */
+  dataVersion: DataVersion
+  /** latest を指定したが実戦値がなく旧計算を使った */
+  usedLegacyFallback: boolean
   reachable: boolean
   /** 主表示：web情報表 + 周期補正（抑制済み） */
   expectedPayoutRate: number | null
@@ -196,7 +204,7 @@ export function expectedGamesToStModel(
   return Math.min(expected, remGCap)
 }
 
-export function calculateKabaneri(input: KabaneriInput): KabaneriResult {
+function calculateKabaneriLegacy(input: KabaneriInput): KabaneriResult {
   const g = Math.max(0, Math.floor(input.displayGames))
   const cycle = Math.min(6, Math.max(1, Math.floor(input.cycle)))
   const shortened = Boolean(input.shortened)
@@ -226,6 +234,8 @@ export function calculateKabaneri(input: KabaneriInput): KabaneriResult {
 
   if (g >= ceilingG) {
     return {
+      dataVersion: 'legacy',
+      usedLegacyFallback: false,
       reachable: false,
       expectedPayoutRate: null,
       expectedWinMedals: winMedals,
@@ -262,6 +272,8 @@ export function calculateKabaneri(input: KabaneriInput): KabaneriResult {
       : null
 
   return {
+    dataVersion: 'legacy',
+    usedLegacyFallback: false,
     reachable: true,
     expectedPayoutRate,
     expectedWinMedals: winMedals,
@@ -280,7 +292,106 @@ export function calculateKabaneri(input: KabaneriInput): KabaneriResult {
   }
 }
 
-export function buildKabaneriPremises(input: KabaneriInput): Premise[] {
+/**
+ * 期待値計算。version='latest'（既定）は通常時を実戦集計で計算し、
+ * 実戦値のない短縮時は旧計算にフォールバック。'legacy' は 2026/11/24 以前の計算。
+ */
+export function calculateKabaneri(
+  input: KabaneriInput,
+  version: DataVersion = 'latest',
+): KabaneriResult {
+  const legacy = calculateKabaneriLegacy(input)
+  if (version === 'legacy') return legacy
+  if (input.shortened) return { ...legacy, usedLegacyFallback: true }
+
+  const g = Math.max(0, Math.floor(input.displayGames))
+  if (!legacy.reachable) {
+    return { ...legacy, dataVersion: 'latest', expectedPayoutRate: null }
+  }
+  const real = interpolateRealEv(g)
+  // 平均投資・平均Gはシミュ表（ゲーム数天井までの投資）を流用
+  const investYen = legacy.tableInvestYen ?? 0
+  const avgGames = legacy.tableAvgGames
+  const avgInvestment = investYen / PREMISES.yenPerMedal
+  return {
+    ...legacy,
+    dataVersion: 'latest',
+    expectedPayoutRate: real.rate,
+    expectedWinMedals: avgInvestment + real.yen / PREMISES.yenPerMedal,
+    tablePayoutRate: real.rate,
+    cycleCorrectionPp: null,
+    avgGames,
+    avgInvestment,
+    tableYenEv: real.yen,
+  }
+}
+
+export function buildKabaneriPremises(
+  input: KabaneriInput,
+  version: DataVersion = 'latest',
+): Premise[] {
+  const useReal = version === 'latest' && !input.shortened
+  const legacyList = buildLegacyPremises(input)
+  const versionPremise: Premise = {
+    label: 'データ版',
+    value: DATA_VERSION_LABEL[useReal ? 'latest' : 'legacy'],
+    basis:
+      version === 'latest' && input.shortened
+        ? '短縮時（設定変更後・駆け抜け後・景之ST後）は実戦値が未公開のため旧計算を使用'
+        : useReal
+          ? '2026/11/24から通常時は実戦集計を主軸に変更'
+          : '2026/11/24以前の計算（シミュレーション表＋周期補正）',
+  }
+  if (!useReal) return [versionPremise, ...legacyList]
+  const mPerG = medalsPerGame()
+  return [
+    versionPremise,
+    {
+      label: '出玉率の主軸',
+      value: `実戦値（約${Math.round(REAL_DATA_INFO.samples / 1000) / 10}万件集計・機械割）`,
+      basis: `AT間（通常ST後 AT2回目以降）・等価。50G区間の値を補間。${REAL_DATA_INFO.updated}更新`,
+    },
+    {
+      label: '周期',
+      value: '実戦値に平均的に含まれる（入力は参考）',
+      basis:
+        '150G・300G付近の周期天井で期待値に山谷がある（201〜250G・351〜400Gは一時的に下がる）。周期補正は二重計上になるため加えない',
+    },
+    {
+      label: '損益分岐・狙い目',
+      value: `約120G〜プラス／機械割106%は${REAL_DATA_INFO.aim106}G〜`,
+      basis: '実戦集計の区間値から',
+    },
+    {
+      label: '平均投資・天井到達率',
+      value: 'シミュ表の値を参考表示',
+      basis: '実戦集計には平均投資がないため。期待出玉率・期待値には使わない',
+      derived: true,
+    },
+    {
+      label: '設定',
+      value: '設定1・固定',
+      basis: 'ハイエナ想定',
+    },
+    {
+      label: '天井',
+      value: `通常 ${PREMISES.ceilingG.normal}G / ${PREMISES.maxCycle.normal}周期`,
+      basis: '天井到達時のみエピソード（ST）確定',
+    },
+    {
+      label: 'ヤメ時',
+      value: 'ST終了後即ヤメ（駆け抜け・景之ST後は短縮天井なので続行）',
+      basis: 'REG（駿城失敗）は打ち継ぎ',
+    },
+    {
+      label: '通常時消費',
+      value: `約${mPerG.toFixed(3)}枚/G`,
+      basis: `50 ÷ ${PREMISES.baseGamesPer50}`,
+    },
+  ]
+}
+
+function buildLegacyPremises(input: KabaneriInput): Premise[] {
   const shortened = input.shortened
   const ceilingG = shortened
     ? PREMISES.ceilingG.shortened
@@ -302,7 +413,7 @@ export function buildKabaneriPremises(input: KabaneriInput): Premise[] {
     {
       label: '初当たり（ST）期待獲得出玉（分子）',
       value: `${PREMISES.tableWinMedals.toFixed(2)}枚（web情報表・一定）`,
-      basis: `表の invest+期待値 から逆算。実践ST平均 ${PREMISES.practiceWinMedals}枚（flick7）は参考のみ。CZは初当たりに含めない`,
+      basis: `表の invest+期待値 から逆算。実戦ST平均 ${PREMISES.practiceWinMedals}枚は参考のみ。CZは初当たりに含めない`,
     },
     {
       label: '設定',

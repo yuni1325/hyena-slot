@@ -13,6 +13,11 @@ import {
   saveSessionsFile,
 } from './storage'
 import { resolveExpectedPayoutRate } from './stats'
+import {
+  loadDataVersionPref,
+  saveDataVersionPref,
+  type DataVersionPref,
+} from './dataVersion'
 import type { MachineSession, SessionsFile } from './types'
 
 type SessionsContextValue = {
@@ -23,6 +28,9 @@ type SessionsContextValue = {
   replaceAll: (file: SessionsFile) => void
   exportJson: () => void
   importJsonText: (text: string) => void
+  /** 期待出玉率の計算に使うデータ版（端末ごとの表示設定） */
+  dataVersion: DataVersionPref
+  setDataVersion: (v: DataVersionPref) => void
 }
 
 const SessionsContext = createContext<SessionsContextValue | null>(null)
@@ -60,6 +68,14 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
     if (refreshed !== loaded) saveSessionsFile(refreshed)
     return refreshed
   })
+
+  const [dataVersion, setDataVersionState] = useState<DataVersionPref>(() =>
+    loadDataVersionPref(),
+  )
+  const setDataVersion = useCallback((v: DataVersionPref) => {
+    saveDataVersionPref(v)
+    setDataVersionState(v)
+  }, [])
 
   const persist = useCallback((next: SessionsFile) => {
     saveSessionsFile(next)
@@ -115,8 +131,12 @@ export function SessionsProvider({ children }: { children: ReactNode }) {
       replaceAll,
       exportJson,
       importJsonText,
+      dataVersion,
+      setDataVersion,
     }),
     [
+      dataVersion,
+      setDataVersion,
       file,
       upsertSession,
       deleteSession,
